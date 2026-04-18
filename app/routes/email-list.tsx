@@ -329,11 +329,11 @@ export default function EmailListRoute() {
 									}}
 									className={`group relative flex flex-col justify-center w-full text-left cursor-pointer transition-colors border-b border-sh-border-thin h-[48px] px-4 ${
 										isSelected ? "bg-sh-bg-selected" : "hover:bg-sh-bg-hover"
-									} ${unread ? "border-l-[3px] border-l-sh-accent pl-[13px]" : "border-l-[3px] border-l-transparent pl-[13px]"}`}
+									} ${isSelected || unread ? "border-l-[3px] border-l-sh-accent pl-[13px]" : "border-l-[3px] border-l-transparent pl-[13px]"}`}
 								>
 									<span
-										className={`truncate text-[13px] ${
-											unread ? "font-semibold text-sh-text-white" : "text-sh-text-read"
+										className={`truncate text-[15px] font-bold ${
+											unread || isSelected ? "text-sh-text-white" : "text-sh-text-read"
 										}`}
 									>
 										{contact.displayName}
@@ -407,23 +407,24 @@ export default function EmailListRoute() {
 										handleRowClick(email);
 									}
 								}}
-								className={`group relative flex flex-col justify-center w-full text-left cursor-pointer transition-colors border-b border-sh-border-thin py-3 px-6 ${
+								className={`group relative flex items-center justify-between w-full text-left cursor-pointer transition-colors border-b border-sh-border-thin h-[48px] px-6 ${
 									isSelected ? "bg-sh-bg-selected" : "hover:bg-sh-bg-hover"
 								}`}
 							>
-								<div className="flex justify-between items-baseline mb-1">
-									<span className={`truncate text-[13px] ${unread ? "font-semibold text-sh-text-white" : "text-sh-text-read"}`}>
+								<div className="flex-1 min-w-0 flex items-baseline mr-4">
+									<span className={`truncate text-[15px] font-bold ${unread ? "text-sh-text-white" : "text-sh-text-read"} shrink-0 max-w-[40%]`}>
 										{email.subject || "(No Subject)"}
 									</span>
-									<span className="text-[12px] text-sh-text-muted shrink-0 ml-2">
-										{formatListDate(email.date)}
-									</span>
+									{snippet && (
+										<span className="truncate text-[14px] text-sh-text-muted flex-1 ml-2">
+											<span className="mr-2 text-sh-text-muted/50">—</span>
+											{snippet}
+										</span>
+									)}
 								</div>
-								{snippet && (
-									<div className="text-[12px] text-sh-text-muted line-clamp-2 mt-1">
-										{snippet}
-									</div>
-								)}
+								<span className="text-[12px] text-sh-text-muted shrink-0">
+									{formatListDate(email.date)}
+								</span>
 							</div>
 						);
 					})}
