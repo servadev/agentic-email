@@ -9,16 +9,41 @@ import { CaretLeftIcon } from "@phosphor-icons/react";
 import { useUIStore } from "~/hooks/useUIStore";
 import type { Email } from "~/types";
 
-export default function SenderCard({ emailId }: { emailId: string }) {
+export default function SenderCard({ contactEmail }: { contactEmail: string }) {
 	const { mailboxId } = useParams<{ mailboxId: string }>();
-	const { data: email } = useEmail(mailboxId, emailId) as { data?: Email };
 	const queryClient = useQueryClient();
 	const { toggleSenderCard } = useUIStore();
+
+	// We use the queryClient to get all emails currently loaded in any list query
+	const allEmailQueries = queryClient.getQueriesData<{ emails: Email[] }>({
+		queryKey: ["emails", mailboxId],
+	});
+
+	// Find the first email matching this contact to extract the display name
+	let email: Email | undefined;
+	const seenThreads = new Set<string>();
+
+	for (const [key, data] of allEmailQueries) {
+		if (data && Array.isArray(data.emails)) {
+			for (const e of data.emails) {
+				const senderStr = e.sender || "";
+				const match = senderStr.match(/(.*)<(.*)>/);
+				const eEmailAddress = match ? match[2].trim() : senderStr;
+				if (eEmailAddress.toLowerCase() === contactEmail.toLowerCase()) {
+					if (!email) email = e;
+					if (e.thread_id) {
+						seenThreads.add(e.thread_id);
+					} else {
+						seenThreads.add(e.id);
+					}
+				}
+			}
+		}
+	}
 
 	if (!email) return null;
 
 	// Parse sender display name and email address
-	// Format is usually "John Doe <john@example.com>" or just "john@example.com"
 	const senderStr = email.sender || "";
 	let displayName = senderStr;
 	let emailAddress = senderStr;
@@ -35,29 +60,7 @@ export default function SenderCard({ emailId }: { emailId: string }) {
 	// Remove quotes if present
 	displayName = displayName.replace(/^"|"$/g, "").trim();
 
-	// Find recent threads count
-	let recentCount = 0;
-	// We use the queryClient to get all emails currently loaded in any list query
-	const allEmailQueries = queryClient.getQueriesData<{ emails: Email[] }>({
-		queryKey: ["emails", mailboxId],
-	});
-
-	// Just collect all emails from the cache and count unique threads from this sender
-	const seenThreads = new Set<string>();
-	for (const [key, data] of allEmailQueries) {
-		if (data && Array.isArray(data.emails)) {
-			for (const e of data.emails) {
-				if (e.sender.includes(emailAddress)) {
-					if (e.thread_id) {
-						seenThreads.add(e.thread_id);
-					} else {
-						seenThreads.add(e.id);
-					}
-				}
-			}
-		}
-	}
-	recentCount = seenThreads.size;
+	const recentCount = seenThreads.size;
 
 	const initial = displayName.charAt(0).toUpperCase() || "?";
 

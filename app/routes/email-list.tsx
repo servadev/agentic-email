@@ -22,6 +22,10 @@ import { useParams } from "react-router";
 import { Folders } from "shared/folders";
 import { formatListDate } from "shared/dates";
 import MailboxSplitView from "~/components/MailboxSplitView";
+import ComposePanel from "~/components/ComposePanel";
+import EmailPanel from "~/components/EmailPanel";
+import SenderCard from "~/components/SenderCard";
+import ThreadContextPanel from "~/components/ThreadContextPanel";
 import { getSnippetText } from "~/lib/utils";
 import {
 	useDeleteEmail,
@@ -146,6 +150,8 @@ export default function EmailListRoute() {
 		folder: string;
 	}>();
 	const {
+		selectedContact,
+		setSelectedContact,
 		selectedEmailId,
 		selectedThreadId,
 		isComposing,
@@ -184,8 +190,6 @@ export default function EmailListRoute() {
 		if (found) return found.name;
 		return folder ? folder.charAt(0).toUpperCase() + folder.slice(1) : "Inbox";
 	}, [folders, folder]);
-
-	const isPanelOpen = selectedEmailId !== null || isComposing;
 
 	// Track folder identity to detect folder changes vs page changes
 	const prevFolderRef = useRef<string | undefined>(undefined);
@@ -257,164 +261,215 @@ export default function EmailListRoute() {
 		}
 	};
 
-	const formatParticipants = (email: Email): string => {
-		if (email.participants) {
-			const names = email.participants
-				.split(",")
-				.map((p) => {
-					const match = p.match(/(.*)<(.*)>/);
-					if (match && match[1].trim()) {
-						return match[1].replace(/^"|"$/g, "").trim();
-					}
-					return p.trim().split("@")[0];
-				})
-				.filter((name, idx, arr) => arr.indexOf(name) === idx);
-			if (names.length <= 3) return names.join(", ");
-			return `${names.slice(0, 2).join(", ")} +${names.length - 2}`;
-		}
+	// Group emails into contacts
+	const contacts = useMemo(() => {
+		const map = new Map<string, { emailAddress: string; displayName: string; latestEmail: Email; threadCount: number; unreadCount: number }>();
 		
-		// Fallback to sender if no participants field
-		const match = email.sender.match(/(.*)<(.*)>/);
-		if (match && match[1].trim()) {
-			return match[1].replace(/^"|"$/g, "").trim();
-		}
-		return email.sender.split("@")[0];
-	};
+		emails.forEach(email => {
+			const senderStr = email.sender || "";
+			let displayName = senderStr;
+			let emailAddress = senderStr;
+
+			const match = senderStr.match(/(.*)<(.*)>/);
+			if (match) {
+				displayName = match[1].trim() || match[2].trim();
+				emailAddress = match[2].trim();
+			} else {
+				displayName = senderStr.split("@")[0];
+			}
+			displayName = displayName.replace(/^"|"$/g, "").trim();
+			
+			// Normalize email address to lowercase early on
+			const normalizedEmailAddress = emailAddress.toLowerCase();
+			const contactId = normalizedEmailAddress;
+
+			const existing = map.get(contactId);
+			if (!existing) {
+				map.set(contactId, {
+					emailAddress: normalizedEmailAddress,
+					displayName,
+					latestEmail: email,
+					threadCount: 1,
+					unreadCount: hasUnread(email) ? 1 : 0
+				});
+			} else {
+				existing.threadCount += 1;
+				existing.unreadCount += (hasUnread(email) ? 1 : 0);
+				if (new Date(email.date).getTime() > new Date(existing.latestEmail.date).getTime()) {
+					existing.latestEmail = email;
+				}
+			}
+		});
+
+		return Array.from(map.values()).sort((a, b) => new Date(b.latestEmail.date).getTime() - new Date(a.latestEmail.date).getTime());
+	}, [emails]);
+
+	const leftPane = (
+		<div className="flex flex-col h-full bg-sh-bg-dark">
+			<div className="flex-1 overflow-y-auto no-scrollbar">
+				{isRefreshing && emails.length === 0 ? (
+					<EmailListSkeleton />
+				) : contacts.length > 0 ? (
+					<div>
+						{contacts.map((contact) => {
+							const isSelected = selectedContact === contact.emailAddress;
+							const snippet = getSnippetText(contact.latestEmail.snippet);
+							const unread = contact.unreadCount > 0;
+							
+							return (
+								<div
+									key={contact.emailAddress}
+									role="button"
+									tabIndex={0}
+									onClick={() => setSelectedContact(contact.emailAddress)}
+									onKeyDown={(e: React.KeyboardEvent) => {
+										if (e.key === "Enter" || e.key === " ") {
+											e.preventDefault();
+											setSelectedContact(contact.emailAddress);
+										}
+									}}
+									className={`group relative flex flex-col justify-center w-full text-left cursor-pointer transition-colors border-b border-sh-border-thin h-[64px] px-4 ${
+										isSelected ? "bg-sh-bg-selected" : "hover:bg-sh-bg-hover"
+									} ${unread ? "border-l-[3px] border-l-sh-accent pl-[13px]" : "border-l-[3px] border-l-transparent pl-[13px]"}`}
+								>
+									<div className="flex justify-between items-baseline mb-1">
+										<span
+											className={`truncate text-[13px] ${
+												unread ? "font-semibold text-sh-text-white" : "text-sh-text-read"
+											}`}
+										>
+											{contact.displayName}
+										</span>
+										<span className="text-[11px] text-sh-text-muted shrink-0 ml-2">
+											{formatListDate(contact.latestEmail.date)}
+										</span>
+									</div>
+									<div className="flex-1 min-w-0 flex items-baseline gap-2 truncate">
+										<span
+											className={`truncate text-[13px] ${
+												unread ? "text-sh-text-white" : "text-sh-text-read"
+											}`}
+										>
+											{contact.latestEmail.subject || "(No Subject)"}
+										</span>
+										{snippet && (
+											<span className="truncate text-[12px] text-sh-text-muted">
+												{snippet}
+											</span>
+										)}
+									</div>
+								</div>
+							);
+						})}
+					</div>
+				) : (
+					<FolderEmptyState
+						folder={folder}
+						onCompose={() => startCompose()}
+					/>
+				)}
+			</div>
+			{totalCount > PAGE_SIZE && (
+				<div className="flex justify-center py-3 border-t border-sh-border shrink-0">
+					<Pagination
+						page={page}
+						setPage={setPage}
+						perPage={PAGE_SIZE}
+						totalCount={totalCount}
+					/>
+				</div>
+			)}
+		</div>
+	);
+
+	let centerPane: React.ReactNode;
+	if (isComposing && !selectedEmailId) {
+		centerPane = <ComposePanel />;
+	} else if (isComposing && selectedEmailId) {
+		centerPane = (
+			<div className="flex flex-col h-full overflow-y-auto">
+				<ComposePanel />
+				<div className="border-t border-sh-border">
+					<EmailPanel emailId={selectedEmailId} />
+				</div>
+			</div>
+		);
+	} else if (selectedEmailId) {
+		centerPane = <EmailPanel emailId={selectedEmailId} />;
+	} else if (selectedContact) {
+		const normalizedSelectedContact = selectedContact.toLowerCase();
+		const contactThreads = emails.filter(e => {
+			const senderStr = e.sender || "";
+			const match = senderStr.match(/(.*)<(.*)>/);
+			const emailAddress = match ? match[2].trim() : senderStr.split("@")[0];
+			return emailAddress.toLowerCase() === normalizedSelectedContact;
+		});
+
+		centerPane = (
+			<div className="flex flex-col h-full bg-sh-bg-panel">
+				<div className="px-6 py-4 border-b border-sh-border flex items-center justify-between shrink-0">
+					<h2 className="text-[14px] font-semibold text-sh-text-white truncate">Conversations with {contacts.find(c => c.emailAddress === normalizedSelectedContact)?.displayName || selectedContact}</h2>
+				</div>
+				<div className="flex-1 overflow-y-auto no-scrollbar">
+					{contactThreads.map(email => {
+						const isSelected = selectedEmailId === email.id;
+						const snippet = getSnippetText(email.snippet);
+						const unread = hasUnread(email);
+						return (
+							<div
+								key={email.id}
+								role="button"
+								tabIndex={0}
+								onClick={() => handleRowClick(email)}
+								onKeyDown={(e) => {
+									if (e.key === "Enter" || e.key === " ") {
+										e.preventDefault();
+										handleRowClick(email);
+									}
+								}}
+								className={`group relative flex flex-col justify-center w-full text-left cursor-pointer transition-colors border-b border-sh-border-thin py-3 px-6 ${
+									isSelected ? "bg-sh-bg-selected" : "hover:bg-sh-bg-hover"
+								}`}
+							>
+								<div className="flex justify-between items-baseline mb-1">
+									<span className={`truncate text-[13px] ${unread ? "font-semibold text-sh-text-white" : "text-sh-text-read"}`}>
+										{email.subject || "(No Subject)"}
+									</span>
+									<span className="text-[12px] text-sh-text-muted shrink-0 ml-2">
+										{formatListDate(email.date)}
+									</span>
+								</div>
+								{snippet && (
+									<div className="text-[12px] text-sh-text-muted line-clamp-2 mt-1">
+										{snippet}
+									</div>
+								)}
+							</div>
+						);
+					})}
+				</div>
+			</div>
+		);
+	} else {
+		centerPane = (
+			<div className="flex items-center justify-center h-full text-sh-text-muted text-[13px]">
+				Select a contact
+			</div>
+		);
+	}
+
+	let rightPane: React.ReactNode | null = null;
+	if (selectedEmailId) {
+		rightPane = <ThreadContextPanel emailId={selectedEmailId} />;
+	} else if (selectedContact) {
+		rightPane = <SenderCard contactEmail={selectedContact} />;
+	}
 
 	return (
 		<MailboxSplitView
-			selectedEmailId={selectedEmailId}
-			isComposing={isComposing}
-		>
-				{/* Email rows */}
-				<div className="flex-1 overflow-y-auto no-scrollbar">
-				{isRefreshing && emails.length === 0 ? (
-					<EmailListSkeleton />
-				) : emails.length > 0 ? (
-						<div>
-							{emails.map((email) => {
-								const isSelected = selectedEmailId === email.id;
-								const snippet = getSnippetText(email.snippet);
-								const unread = hasUnread(email);
-								
-								return (
-									<div
-										key={email.id}
-										role="button"
-										tabIndex={0}
-										onClick={() => handleRowClick(email)}
-										onKeyDown={(e: React.KeyboardEvent) => {
-											if (e.key === "Enter" || e.key === " ") {
-												e.preventDefault();
-												handleRowClick(email);
-											}
-										}}
-										className={`group relative flex items-center w-full text-left cursor-pointer transition-colors border-b border-sh-border-thin h-[48px] px-3 ${
-											isSelected ? "bg-sh-bg-selected" : "hover:bg-sh-bg-hover"
-										} ${unread ? "border-l-[3px] border-l-sh-accent pl-[9px]" : "border-l-[3px] border-l-transparent pl-[9px]"}`}
-									>
-										{/* Star (revealed on hover or if already starred) */}
-										<button
-											type="button"
-											className={`shrink-0 p-1 mr-2 bg-transparent border-0 cursor-pointer transition-opacity ${email.starred ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
-											onClick={(e: React.MouseEvent) => {
-												e.stopPropagation();
-												toggleStar(e, email);
-											}}
-										>
-											<StarIcon
-												size={16}
-												weight={email.starred ? "fill" : "regular"}
-												className={
-													email.starred
-														? "text-[#eab308]"
-														: "text-sh-text-muted hover:text-[#eab308]"
-												}
-											/>
-										</button>
-
-										{/* Content */}
-										<div className="min-w-0 flex-1 flex items-baseline gap-2">
-											<span
-												className={`truncate w-32 shrink-0 text-[13px] ${
-													unread ? "font-semibold text-sh-text-white" : "text-sh-text-read"
-												}`}
-											>
-												{formatParticipants(email)}
-											</span>
-											
-											<div className="flex-1 min-w-0 flex items-baseline gap-2 truncate">
-												<span
-													className={`truncate text-[13px] ${
-														unread ? "text-sh-text-white" : "text-sh-text-read"
-													}`}
-												>
-													{email.subject}
-												</span>
-												{snippet && (
-													<span className="truncate text-[12px] text-sh-text-muted">
-														{snippet}
-													</span>
-												)}
-											</div>
-											
-											<span className="text-[11px] text-sh-text-muted shrink-0 ml-2">
-												{formatListDate(email.date)}
-											</span>
-										</div>
-
-										{/* Hover actions */}
-										<div className="hidden group-hover:flex items-center shrink-0 ml-2">
-											<Tooltip content={email.read ? "Mark unread" : "Mark read"} asChild>
-												<button
-													className="p-1 text-sh-text-muted hover:text-sh-text-white transition-colors"
-													onClick={(e: React.MouseEvent) => {
-														e.stopPropagation();
-														if (mailboxId)
-															updateEmail.mutate({
-																mailboxId,
-																id: email.id,
-																data: { read: !email.read },
-															});
-													}}
-													aria-label={email.read ? "Mark unread" : "Mark read"}
-												>
-													{email.read ? <EnvelopeSimpleIcon size={14} /> : <EnvelopeOpenIcon size={14} />}
-												</button>
-											</Tooltip>
-											<Tooltip content="Delete" asChild>
-												<button
-													className="p-1 text-sh-text-muted hover:text-sh-text-white transition-colors"
-													onClick={(e: React.MouseEvent) => handleDelete(e, email.id)}
-													aria-label="Delete"
-												>
-													<TrashIcon size={14} />
-												</button>
-											</Tooltip>
-										</div>
-									</div>
-								);
-							})}
-						</div>
-					) : (
-						<FolderEmptyState
-							folder={folder}
-							onCompose={() => startCompose()}
-						/>
-					)}
-				</div>
-
-				{/* Pagination */}
-				{totalCount > PAGE_SIZE && (
-					<div className="flex justify-center py-3 border-t border-kumo-line shrink-0">
-						<Pagination
-							page={page}
-							setPage={setPage}
-							perPage={PAGE_SIZE}
-							totalCount={totalCount}
-						/>
-					</div>
-				)}
-		</MailboxSplitView>
+			leftPane={leftPane}
+			centerPane={centerPane}
+			rightPane={rightPane}
+		/>
 	);
 }

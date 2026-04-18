@@ -49,11 +49,16 @@ interface UIState {
 	// Alias for selectedEmailId
 	selectedThreadId: string | null;
 	setSelectedThreadId: (id: string | null) => void;
+
+	// Contact list selection
+	selectedContact: string | null;
+	setSelectedContact: (contact: string | null) => void;
 }
 
 export const useUIStore = create<UIState>((set, get) => ({
 	selectedEmailId: null,
 	selectedThreadId: null,
+	selectedContact: null,
 	isComposing: false,
 	_previousEmailId: null,
 	composeOptions: { mode: "new", originalEmail: null },
@@ -64,6 +69,7 @@ export const useUIStore = create<UIState>((set, get) => ({
 
 	selectEmail: (id) => set({ selectedEmailId: id, selectedThreadId: id, isComposing: false }),
 	setSelectedThreadId: (id) => set({ selectedThreadId: id, selectedEmailId: id, isComposing: false }),
+	setSelectedContact: (contact) => set({ selectedContact: contact, selectedThreadId: null, selectedEmailId: null, isComposing: false }),
 
 	startCompose: (options) =>
 		set((state) => {
@@ -79,7 +85,7 @@ export const useUIStore = create<UIState>((set, get) => ({
 			};
 		}),
 
-	closePanel: () => set({ selectedEmailId: null, isComposing: false, _previousEmailId: null, composeOptions: { mode: "new" as const, originalEmail: null } }),
+	closePanel: () => set({ selectedContact: null, selectedThreadId: null, selectedEmailId: null, isComposing: false, _previousEmailId: null, composeOptions: { mode: "new" as const, originalEmail: null } }),
 
 	closeCompose: () =>
 		set((state) => ({
