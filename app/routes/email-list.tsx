@@ -258,27 +258,21 @@ export default function EmailListRoute() {
 	};
 
 	const formatParticipants = (email: Email): string => {
-		if (email.participants) {
-			const names = email.participants
-				.split(",")
-				.map((p) => {
-					const match = p.match(/(.*)<(.*)>/);
-					if (match && match[1].trim()) {
-						return match[1].replace(/^"|"$/g, "").trim();
-					}
-					return p.trim().split("@")[0];
-				})
-				.filter((name, idx, arr) => arr.indexOf(name) === idx);
-			if (names.length <= 3) return names.join(", ");
-			return `${names.slice(0, 2).join(", ")} +${names.length - 2}`;
-		}
-		
-		// Fallback to sender if no participants field
-		const match = email.sender.match(/(.*)<(.*)>/);
-		if (match && match[1].trim()) {
-			return match[1].replace(/^"|"$/g, "").trim();
-		}
-		return email.sender.split("@")[0];
+		const target = folder === "sent" ? email.recipient : email.sender;
+		if (!target) return "";
+
+		return target
+			.split(",")
+			.map((part) => {
+				const match = part.match(/(.*)<(.*)>/);
+				if (match && match[1].trim()) {
+					return match[1].replace(/^"|"$/g, "").trim();
+				}
+				return part.split("@")[0].trim();
+			})
+			.filter(Boolean)
+			.filter((name, idx, arr) => arr.indexOf(name) === idx)
+			.join(", ");
 	};
 
 	return (
@@ -357,10 +351,6 @@ export default function EmailListRoute() {
 													</span>
 												)}
 											</div>
-											
-											<span className="text-[11px] text-sh-text-muted shrink-0 ml-2">
-												{formatListDate(email.date)}
-											</span>
 										</div>
 
 										{/* Hover actions */}
