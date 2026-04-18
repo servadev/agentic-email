@@ -92,7 +92,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				<Meta />
 				<Links />
 			</head>
-			<body className="bg-kumo-recessed text-kumo-default antialiased">
+			<body className="bg-sh-bg-dark text-sh-text-white font-sh-sans text-sh-base leading-[1.4] antialiased">
 				{children}
 				<ScrollRestoration />
 				<Scripts />

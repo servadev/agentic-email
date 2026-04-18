@@ -17,7 +17,7 @@ import {
 	TrayIcon,
 } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { Folders } from "shared/folders";
 import { formatListDate } from "shared/dates";
@@ -273,42 +273,8 @@ export default function EmailListRoute() {
 			selectedEmailId={selectedEmailId}
 			isComposing={isComposing}
 		>
-				{/* Folder header */}
-				<div className="flex items-center justify-between px-4 py-3.5 border-b border-kumo-line shrink-0 md:px-5">
-					<h1 className="text-lg font-semibold text-kumo-default">
-						{folderName}
-					</h1>
-					<div className="flex items-center gap-1">
-						{totalCount > 0 && (
-							<span className="text-sm text-kumo-subtle mr-2 hidden sm:inline">
-								{totalCount} conversation{totalCount !== 1 ? "s" : ""}
-							</span>
-						)}
-						<Tooltip
-							content={isRefreshing ? "Refreshing..." : "Refresh"}
-							side="bottom"
-							asChild
-						>
-							<Button
-								variant="ghost"
-								shape="square"
-								size="sm"
-								icon={
-									<ArrowsClockwiseIcon
-										size={18}
-										className={isRefreshing ? "animate-spin" : ""}
-									/>
-								}
-								onClick={handleRefresh}
-								disabled={isRefreshing}
-								aria-label="Refresh"
-							/>
-						</Tooltip>
-					</div>
-				</div>
-
 				{/* Email rows */}
-				<div className="flex-1 overflow-y-auto">
+				<div className="flex-1 overflow-y-auto no-scrollbar">
 				{isRefreshing && emails.length === 0 ? (
 					<EmailListSkeleton />
 				) : emails.length > 0 ? (
@@ -316,34 +282,29 @@ export default function EmailListRoute() {
 							{emails.map((email) => {
 								const isSelected = selectedEmailId === email.id;
 								const snippet = getSnippetText(email.snippet);
+								const unread = hasUnread(email);
+								
 								return (
 									<div
 										key={email.id}
 										role="button"
 										tabIndex={0}
 										onClick={() => handleRowClick(email)}
-										onKeyDown={(e) => {
+										onKeyDown={(e: React.KeyboardEvent) => {
 											if (e.key === "Enter" || e.key === " ") {
 												e.preventDefault();
 												handleRowClick(email);
 											}
 										}}
-										className={`group flex items-center gap-3 w-full text-left cursor-pointer transition-colors border-b border-kumo-line px-4 py-2.5 md:px-6 md:py-3 ${
-											isPanelOpen ? "md:px-4 md:py-2.5" : ""
-										} ${isSelected ? "bg-kumo-tint" : "hover:bg-kumo-tint"}`}
+										className={`group relative flex items-center w-full text-left cursor-pointer transition-colors border-b border-sh-border-thin h-[48px] px-3 ${
+											isSelected ? "bg-sh-bg-selected" : "hover:bg-sh-bg-hover"
+										} ${unread ? "border-l-[3px] border-l-sh-accent pl-[9px]" : "border-l-[3px] border-l-transparent pl-[9px]"}`}
 									>
-										{/* Unread dot */}
-										<div className="w-2.5 shrink-0 flex justify-center">
-											{hasUnread(email) && (
-												<div className="h-2 w-2 rounded-full bg-kumo-brand" />
-											)}
-										</div>
-
-										{/* Star */}
+										{/* Star (revealed on hover or if already starred) */}
 										<button
 											type="button"
-											className="shrink-0 p-0.5 bg-transparent border-0 cursor-pointer"
-											onClick={(e) => {
+											className={`shrink-0 p-1 mr-2 bg-transparent border-0 cursor-pointer transition-opacity ${email.starred ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+											onClick={(e: React.MouseEvent) => {
 												e.stopPropagation();
 												toggleStar(e, email);
 											}}
@@ -360,57 +321,41 @@ export default function EmailListRoute() {
 										</button>
 
 										{/* Content */}
-										<div className="min-w-0 flex-1">
-											<div className="flex items-center gap-2">
+										<div className="min-w-0 flex-1 flex items-baseline gap-2">
+											<span
+												className={`truncate w-32 shrink-0 text-[13px] ${
+													unread ? "font-semibold text-sh-text-white" : "text-sh-text-read"
+												}`}
+											>
+												{formatParticipants(email)}
+											</span>
+											
+											<div className="flex-1 min-w-0 flex items-baseline gap-2 truncate">
 												<span
-													className={`truncate text-sm ${hasUnread(email) ? "font-semibold text-kumo-default" : "text-kumo-strong"}`}
-												>
-													{formatParticipants(email)}
-												</span>
-												{(email.thread_count ?? 1) > 1 && (
-													<span className="shrink-0 text-xs text-kumo-subtle bg-kumo-fill rounded-full px-1.5 py-0.5 font-medium">
-														{email.thread_count}
-													</span>
-												)}
-												{email.has_draft && (
-													<span className="shrink-0 text-xs text-kumo-destructive font-medium">
-														Draft
-													</span>
-												)}
-												{email.needs_reply && !email.has_draft && (
-													<Tooltip content="Needs reply" asChild>
-														<span className="shrink-0 text-kumo-warning">
-															<ArrowBendUpLeftIcon size={14} weight="bold" />
-														</span>
-													</Tooltip>
-												)}
-												<span className="text-sm text-kumo-subtle shrink-0 ml-auto">
-													{formatListDate(email.date)}
-												</span>
-											</div>
-											<div className="truncate text-sm mt-0.5">
-												<span
-													className={hasUnread(email) ? "font-medium text-kumo-default" : "text-kumo-subtle"}
+													className={`truncate text-[13px] ${
+														unread ? "text-sh-text-white" : "text-sh-text-read"
+													}`}
 												>
 													{email.subject}
 												</span>
-											{snippet && (
-												<span className="text-kumo-subtle font-normal">
-													{" "}&mdash; {snippet}
-												</span>
-											)}
+												{snippet && (
+													<span className="truncate text-[12px] text-sh-text-muted">
+														{snippet}
+													</span>
+												)}
+											</div>
+											
+											<span className="text-[11px] text-sh-text-muted shrink-0 ml-2">
+												{formatListDate(email.date)}
+											</span>
 										</div>
-									</div>
 
 										{/* Hover actions */}
-										<div className="hidden group-hover:flex items-center shrink-0">
+										<div className="hidden group-hover:flex items-center shrink-0 ml-2">
 											<Tooltip content={email.read ? "Mark unread" : "Mark read"} asChild>
-												<Button
-													variant="ghost"
-													shape="square"
-													size="sm"
-													icon={email.read ? <EnvelopeSimpleIcon size={14} /> : <EnvelopeOpenIcon size={14} />}
-													onClick={(e) => {
+												<button
+													className="p-1 text-sh-text-muted hover:text-sh-text-white transition-colors"
+													onClick={(e: React.MouseEvent) => {
 														e.stopPropagation();
 														if (mailboxId)
 															updateEmail.mutate({
@@ -420,17 +365,18 @@ export default function EmailListRoute() {
 															});
 													}}
 													aria-label={email.read ? "Mark unread" : "Mark read"}
-												/>
+												>
+													{email.read ? <EnvelopeSimpleIcon size={14} /> : <EnvelopeOpenIcon size={14} />}
+												</button>
 											</Tooltip>
 											<Tooltip content="Delete" asChild>
-												<Button
-													variant="ghost"
-													shape="square"
-													size="sm"
-													icon={<TrashIcon size={14} />}
-													onClick={(e) => handleDelete(e, email.id)}
+												<button
+													className="p-1 text-sh-text-muted hover:text-sh-text-white transition-colors"
+													onClick={(e: React.MouseEvent) => handleDelete(e, email.id)}
 													aria-label="Delete"
-												/>
+												>
+													<TrashIcon size={14} />
+												</button>
 											</Tooltip>
 										</div>
 									</div>

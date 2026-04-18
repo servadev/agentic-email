@@ -81,17 +81,17 @@ function ToolCallBadge({
 		state === "output-error";
 
 	return (
-		<div className="flex items-center gap-1.5 py-1 px-2 rounded bg-kumo-fill/50 text-xs">
-			<span className="text-kumo-brand">{info.icon}</span>
-			<span className="text-kumo-strong">{info.label}</span>
+		<div className="flex items-center gap-1.5 py-1 px-2 rounded-[2px] bg-sh-bg-hover text-[12px]">
+			<span className="text-sh-accent">{info.icon}</span>
+			<span className="text-sh-text-white">{info.label}</span>
 			{isDone ? (
 				<CheckCircleIcon
 					size={12}
 					weight="fill"
-					className="text-kumo-success ml-auto"
+					className="text-sh-accent ml-auto"
 				/>
 			) : (
-				<Loader size="sm" className="ml-auto" />
+				<Loader size="sm" className="ml-auto text-sh-text-muted" />
 			)}
 		</div>
 	);
@@ -148,10 +148,10 @@ function MessageBubble({
 			className={`flex gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}
 		>
 			<div
-				className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+				className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-[2px] ${
 					isUser
-						? "bg-kumo-brand text-kumo-inverse"
-						: "bg-kumo-fill text-kumo-default"
+						? "bg-sh-accent text-sh-text-white"
+						: "bg-sh-bg-hover text-sh-text-white"
 				}`}
 			>
 				{isUser ? (
@@ -171,10 +171,10 @@ function MessageBubble({
 						return (
 							<div
 								key={key}
-								className={`rounded-lg px-3 py-2 text-[13px] leading-relaxed break-words overflow-wrap-anywhere ${
+								className={`rounded-[2px] px-3 py-2 text-[13px] leading-relaxed break-words overflow-wrap-anywhere ${
 									isUser
-										? "bg-kumo-brand text-kumo-inverse rounded-br-sm"
-										: "bg-kumo-elevated text-kumo-default border border-kumo-line rounded-bl-sm overflow-hidden"
+										? "bg-sh-bg-selected text-sh-text-white"
+										: "bg-transparent text-sh-text-read"
 								}`}
 							>
 								{isUser ? (
@@ -343,12 +343,11 @@ function AgentChatConnected({
 	];
 
 	return (
-		<div className="flex flex-col h-full">
+		<div className="flex flex-col h-full bg-sh-bg-panel text-sh-text-white">
 			{/* Header */}
-			<div className="flex items-center justify-between px-3 py-1.5 border-b border-kumo-line shrink-0">
+			<div className="flex items-center justify-between px-4 py-2 border-b border-sh-border shrink-0">
 				<div className="flex items-center gap-2">
-					<Badge variant="beta">AI</Badge>
-					<span className="text-xs text-kumo-subtle">
+					<span className="text-[11px] font-semibold text-sh-text-muted uppercase tracking-wider">
 						Email Agent
 					</span>
 				</div>
@@ -356,39 +355,39 @@ function AgentChatConnected({
 					{isStreaming && <Loader size="sm" />}
 					{messages.length > 0 && (
 						<Tooltip content="Clear chat" asChild>
-							<Button
-								variant="ghost"
-								shape="square"
-								size="sm"
-								icon={<TrashIcon size={14} />}
+							<button
+								type="button"
 								onClick={() => {
 									if (window.confirm("Clear chat history?")) {
 										setMessages([]);
 									}
 								}}
+								className="p-1 text-sh-text-muted hover:text-sh-text-white transition-colors focus:outline-none focus:ring-2 focus:ring-sh-accent rounded-[2px]"
 								aria-label="Clear chat"
-							/>
+							>
+								<TrashIcon size={14} />
+							</button>
 						</Tooltip>
 					)}
 				</div>
 			</div>
 
 			{/* Messages */}
-			<div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-4">
+			<div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 no-scrollbar">
 				{messages.length === 0 ? (
 					<div className="flex flex-col items-center justify-center h-full gap-4">
-						<div className="flex h-12 w-12 items-center justify-center rounded-xl bg-kumo-brand/10">
+						<div className="flex h-12 w-12 items-center justify-center rounded-[2px] bg-sh-bg-hover">
 							<RobotIcon
 								size={24}
 								weight="duotone"
-								className="text-kumo-brand"
+								className="text-sh-accent"
 							/>
 						</div>
-						<p className="text-xs text-kumo-subtle text-center leading-relaxed px-4">
+						<p className="text-[12px] text-sh-text-muted text-center leading-relaxed px-4">
 							I can read emails, search conversations, and draft
 							replies.
 						</p>
-						<div className="flex flex-col gap-1.5 w-full">
+						<div className="flex flex-col gap-1.5 w-full mt-4">
 							{suggestedPrompts.map((prompt) => (
 								<button
 									key={prompt}
@@ -396,7 +395,7 @@ function AgentChatConnected({
 									onClick={() =>
 										sendMessage({ text: prompt })
 									}
-									className="text-left px-3 py-2 rounded-lg border border-kumo-line text-xs text-kumo-strong hover:bg-kumo-tint hover:border-kumo-fill-hover transition-colors cursor-pointer bg-transparent"
+									className="text-left px-3 py-2 rounded-[2px] border border-sh-border-thin text-[12px] text-sh-text-white hover:bg-sh-bg-hover transition-colors cursor-pointer bg-transparent focus:outline-none focus:ring-2 focus:ring-sh-accent"
 								>
 									{prompt}
 								</button>
@@ -404,7 +403,7 @@ function AgentChatConnected({
 						</div>
 					</div>
 				) : (
-					<div className="flex flex-col gap-3">
+					<div className="flex flex-col gap-4">
 						{messages.map((msg) => (
 							<MessageBubble
 								key={msg.id}
@@ -455,12 +454,12 @@ function AgentChatConnected({
 						))}
 						{isStreaming && (
 							<div className="flex gap-2">
-								<div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-kumo-fill text-kumo-default">
+								<div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[2px] bg-sh-bg-hover text-sh-text-white">
 									<RobotIcon size={12} weight="bold" />
 								</div>
-								<div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-kumo-elevated border border-kumo-line rounded-bl-sm">
+								<div className="flex items-center gap-1.5 px-3 py-2 rounded-[2px] bg-transparent text-sh-text-muted">
 									<Loader size="sm" />
-									<span className="text-xs text-kumo-subtle">
+									<span className="text-[13px]">
 										Thinking...
 									</span>
 								</div>
@@ -471,20 +470,19 @@ function AgentChatConnected({
 			</div>
 
 			{/* Input */}
-			<div className="shrink-0 border-t border-kumo-line px-3 py-2">
+			<div className="shrink-0 border-t border-sh-border px-4 py-3">
 				{isStreaming ? (
 					<div className="flex justify-center">
-						<Button
-							variant="secondary"
-							size="sm"
-							icon={<StopIcon size={14} weight="fill" />}
+						<button
+							className="text-[12px] font-medium text-sh-text-muted hover:text-sh-text-white transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-sh-accent rounded-[2px] p-1"
 							onClick={() => stop()}
 						>
+							<StopIcon size={14} weight="fill" />
 							Stop generating
-						</Button>
+						</button>
 					</div>
 				) : (
-					<div className="flex items-end gap-1.5">
+					<div className="flex items-end gap-2">
 						<textarea
 							ref={inputRef}
 							id="agent-chat-input"
@@ -495,7 +493,7 @@ function AgentChatConnected({
 							placeholder="Ask your email agent..."
 							rows={1}
 							aria-label="Chat message input"
-							className="flex-1 resize-none rounded-lg border border-kumo-line bg-kumo-control px-3 py-2 text-xs text-kumo-default placeholder:text-kumo-subtle focus:outline-none focus:ring-1 focus:ring-kumo-ring min-h-[36px] max-h-[100px]"
+							className="flex-1 resize-none rounded-[2px] border border-sh-border-thin bg-sh-search-bg px-3 py-2 text-[13px] text-sh-text-white placeholder:text-sh-search-placeholder focus:outline-none focus:border-sh-text-muted min-h-[36px] max-h-[100px] transition-colors"
 							style={{ height: "auto", overflow: "hidden" }}
 							onInput={(e) => {
 								const t = e.target as HTMLTextAreaElement;
@@ -505,15 +503,14 @@ function AgentChatConnected({
 									t.scrollHeight > 100 ? "auto" : "hidden";
 							}}
 						/>
-						<Button
-							variant="primary"
-							shape="square"
-							size="sm"
+						<button
 							disabled={!inputValue.trim()}
-							icon={<ArrowUpIcon size={14} weight="bold" />}
 							onClick={handleSend}
 							aria-label="Send message"
-						/>
+							className="h-[36px] w-[36px] flex items-center justify-center rounded-[2px] bg-sh-accent text-sh-text-white hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-sh-accent focus:outline-none"
+						>
+							<ArrowUpIcon size={14} weight="bold" />
+						</button>
 					</div>
 				)}
 			</div>

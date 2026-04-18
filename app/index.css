@@ -6,6 +6,64 @@ body {
   margin: 0;
 }
 
+@theme {
+  --color-sh-bg-dark: #111111;
+  --color-sh-bg-panel: #111111;
+  --color-sh-bg-hover: #1f1f1f;
+  --color-sh-bg-selected: #252525;
+  --color-sh-border: #2a2a2a;
+  --color-sh-border-thin: #333333;
+  --color-sh-accent: #e8500a;
+  --color-sh-text-white: #ffffff;
+  --color-sh-text-muted: #888888;
+  --color-sh-text-read: #aaaaaa;
+  --color-sh-text-inactive: #666666;
+  --color-sh-search-bg: #1e1e1e;
+  --color-sh-search-placeholder: #444444;
+
+  --font-sh-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --text-sh-base: 13px;
+
+  --spacing-sh-row: 48px;
+  --spacing-sh-rail: 48px;
+  --spacing-sh-panel: 380px;
+
+  --transition-sh-panel: 150ms ease;
+  --transition-sh-hover: 80ms ease;
+}
+
+:root {
+  --sh-bg-dark: #111111;
+  --sh-bg-panel: #111111;
+  --sh-bg-hover: #1f1f1f;
+  --sh-bg-selected: #252525;
+  --sh-border: #2a2a2a;
+  --sh-border-thin: #333333;
+  --sh-accent: #e8500a;
+  --sh-text-white: #ffffff;
+  --sh-text-muted: #888888;
+  --sh-text-read: #aaaaaa;
+  --sh-text-inactive: #666666;
+  --sh-search-bg: #1e1e1e;
+  --sh-search-placeholder: #444444;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
 /* TipTap list styles */
 .ProseMirror ul {
   list-style-type: disc;

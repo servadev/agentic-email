@@ -39,7 +39,7 @@ export default function MailboxRoute() {
 	}, [mailboxId, closeComposeModal, closePanel, closeSidebar]);
 
 	return (
-		<div className="flex h-screen overflow-hidden">
+		<div className="flex h-screen overflow-hidden bg-sh-bg-dark font-sh-sans">
 			{/* Mobile sidebar overlay backdrop */}
 			{isSidebarOpen && (
 				<div
@@ -52,26 +52,29 @@ export default function MailboxRoute() {
 				/>
 			)}
 
-			{/* Sidebar: hidden on mobile by default, shown as overlay when open */}
-			<div
-				className={`fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:z-0 ${
-					isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-				}`}
-			>
+			{/* Left icon rail (collapsed sidebar) */}
+			<div className="w-sh-rail shrink-0 border-r border-sh-border flex flex-col items-center py-4 bg-sh-bg-panel z-10 hidden md:flex">
+				{/* The icon rail can be extracted to a separate component, but we will place Compose button in Header and maybe just some icons here or leave it empty if nav moved to top */}
+				{/* Assuming Sidebar is removed or refactored into just icons */}
 				<Sidebar />
 			</div>
 
 			{/* Main content */}
-			<div className="flex-1 flex flex-col min-w-0 bg-kumo-base">
+			<div className="flex-1 flex flex-col min-w-0 bg-sh-bg-dark">
 				<Header />
-				<main className="flex-1 overflow-hidden">
+				<main className="flex-1 overflow-hidden relative">
 					<Outlet />
 				</main>
 			</div>
 
+			{/* Resize handle (visual only for now) */}
+			{isAgentPanelOpen && (
+				<div className="hidden lg:block w-[1px] bg-sh-border cursor-col-resize hover:bg-sh-accent transition-colors" />
+			)}
+
 			{/* Agent + MCP sidebar -- togglable on desktop */}
 			{isAgentPanelOpen && (
-				<div className="hidden lg:flex w-[380px] shrink-0 border-l border-kumo-line flex-col bg-kumo-base overflow-hidden">
+				<div className="hidden lg:flex w-sh-panel shrink-0 flex-col bg-sh-bg-panel overflow-hidden transition-all duration-sh-panel">
 					<AgentSidebar />
 				</div>
 			)}

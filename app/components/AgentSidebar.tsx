@@ -3,9 +3,10 @@
 //     https://opensource.org/licenses/Apache-2.0
 
 import { Loader } from "@cloudflare/kumo";
-import { PlugsIcon, RobotIcon } from "@phosphor-icons/react";
+import { PlugsIcon, RobotIcon, XIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import MCPPanel from "./MCPPanel";
+import { useUIStore } from "~/hooks/useUIStore";
 
 function LazyAgentPanel() {
 	const [AgentChat, setAgentChat] = useState<React.ComponentType | null>(
@@ -42,38 +43,53 @@ function LazyAgentPanel() {
 
 export default function AgentSidebar() {
 	const [activeTab, setActiveTab] = useState<"agent" | "mcp">("agent");
+	const { toggleAgentPanel } = useUIStore();
 
 	return (
-		<div className="flex flex-col h-full">
-			{/* Tab bar */}
-			<div className="flex items-center border-b border-kumo-line shrink-0">
+		<div className="flex flex-col h-full bg-sh-bg-panel">
+			{/* Slim Header */}
+			<div className="flex items-center justify-between px-4 h-[32px] border-b border-sh-border shrink-0">
+				<div className="flex items-center gap-4">
+					<button
+						type="button"
+						onClick={() => setActiveTab("agent")}
+						className={`text-[11px] tracking-wider uppercase font-semibold transition-colors ${
+							activeTab === "agent"
+								? "text-sh-text-white"
+								: "text-sh-text-muted hover:text-sh-text-read"
+						}`}
+					>
+						Agent
+					</button>
+					<button
+						type="button"
+						onClick={() => setActiveTab("mcp")}
+						className={`text-[11px] tracking-wider uppercase font-semibold transition-colors ${
+							activeTab === "mcp"
+								? "text-sh-text-white"
+								: "text-sh-text-muted hover:text-sh-text-read"
+						}`}
+					>
+						MCP
+					</button>
+				</div>
 				<button
 					type="button"
-					onClick={() => setActiveTab("agent")}
-					className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 bg-transparent cursor-pointer ${
-						activeTab === "agent"
-							? "border-kumo-brand text-kumo-default"
-							: "border-transparent text-kumo-subtle hover:text-kumo-default"
-					}`}
+					onClick={() => toggleAgentPanel()}
+					onKeyDown={(e) => {
+						if (e.key === "Enter" || e.key === " ") {
+							e.preventDefault();
+							toggleAgentPanel();
+						}
+					}}
+					className="p-1 text-sh-text-muted hover:text-sh-text-white transition-colors focus:outline-none focus:ring-2 focus:ring-sh-accent rounded-[2px]"
+					aria-label="Close panel"
 				>
-					<RobotIcon size={14} weight={activeTab === "agent" ? "fill" : "regular"} />
-					Agent
-				</button>
-				<button
-					type="button"
-					onClick={() => setActiveTab("mcp")}
-					className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 bg-transparent cursor-pointer ${
-						activeTab === "mcp"
-							? "border-kumo-brand text-kumo-default"
-							: "border-transparent text-kumo-subtle hover:text-kumo-default"
-					}`}
-				>
-					<PlugsIcon size={14} weight={activeTab === "mcp" ? "fill" : "regular"} />
-					MCP
+					<XIcon size={14} />
 				</button>
 			</div>
 
-			{/* Tab content — keep agent mounted so chat isn't lost */}
+			{/* Tab content */}
 			<div className="flex-1 min-h-0 overflow-hidden">
 				<div className={activeTab === "agent" ? "h-full" : "hidden"}>
 					<LazyAgentPanel />
