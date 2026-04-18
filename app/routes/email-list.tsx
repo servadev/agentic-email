@@ -328,36 +328,17 @@ export default function EmailListRoute() {
 											setSelectedContact(contact.emailAddress);
 										}
 									}}
-									className={`group relative flex flex-col justify-center w-full text-left cursor-pointer transition-colors border-b border-sh-border-thin h-[64px] px-4 ${
+									className={`group relative flex flex-col justify-center w-full text-left cursor-pointer transition-colors border-b border-sh-border-thin h-[48px] px-4 ${
 										isSelected ? "bg-sh-bg-selected" : "hover:bg-sh-bg-hover"
 									} ${unread ? "border-l-[3px] border-l-sh-accent pl-[13px]" : "border-l-[3px] border-l-transparent pl-[13px]"}`}
 								>
-									<div className="flex justify-between items-baseline mb-1">
-										<span
-											className={`truncate text-[13px] ${
-												unread ? "font-semibold text-sh-text-white" : "text-sh-text-read"
-											}`}
-										>
-											{contact.displayName}
-										</span>
-										<span className="text-[11px] text-sh-text-muted shrink-0 ml-2">
-											{formatListDate(contact.latestEmail.date)}
-										</span>
-									</div>
-									<div className="flex-1 min-w-0 flex items-baseline gap-2 truncate">
-										<span
-											className={`truncate text-[13px] ${
-												unread ? "text-sh-text-white" : "text-sh-text-read"
-											}`}
-										>
-											{contact.latestEmail.subject || "(No Subject)"}
-										</span>
-										{snippet && (
-											<span className="truncate text-[12px] text-sh-text-muted">
-												{snippet}
-											</span>
-										)}
-									</div>
+									<span
+										className={`truncate text-[13px] ${
+											unread ? "font-semibold text-sh-text-white" : "text-sh-text-read"
+										}`}
+									>
+										{contact.displayName}
+									</span>
 								</div>
 							);
 						})}
@@ -401,7 +382,7 @@ export default function EmailListRoute() {
 		const contactThreads = emails.filter(e => {
 			const senderStr = e.sender || "";
 			const match = senderStr.match(/(.*)<(.*)>/);
-			const emailAddress = match ? match[2].trim() : senderStr.split("@")[0];
+			const emailAddress = match ? match[2].trim() : senderStr;
 			return emailAddress.toLowerCase() === normalizedSelectedContact;
 		});
 
