@@ -25,29 +25,27 @@ export default function MailboxSplitView({
 	const { isSenderCardOpen } = useUIStore();
 
 	return (
-		<div className="flex h-full bg-sh-bg-dark text-sh-text-white relative overflow-hidden">
-			{/* Left Pane: Thread List (Takes up all available space until panel opens) */}
+		<div className="flex h-full bg-sh-bg-dark text-sh-text-white">
+			{/* Left Pane: Thread List */}
 			<div
-				className={`flex flex-col min-w-0 shrink-0 flex-1 ${
+				className={`flex flex-col min-w-0 shrink-0 ${
 					isMobilePanelOpen
-						? "hidden md:flex"
-						: "flex w-full"
+						? "hidden md:flex md:w-64"
+						: "flex w-full md:w-64"
 				}`}
 			>
 				{children}
 			</div>
 			
-			{/* Resize Handle between list and email view (always visible on desktop if panel is open) */}
-			{isMobilePanelOpen && (
-				<div className="hidden md:block w-[1px] bg-sh-border cursor-col-resize hover:bg-sh-accent transition-colors shrink-0" />
-			)}
+			{/* Resize Handle between list and email view (always visible on desktop) */}
+			<div className="hidden md:block w-[1px] bg-sh-border cursor-col-resize hover:bg-sh-accent transition-colors shrink-0" />
 
-			{/* Centre Pane: Email Thread Content (Fixed wide panel on the right) */}
-			<div className={`flex-col min-w-0 overflow-hidden ${
+			{/* Centre Pane: Email Thread Content */}
+			<div className={`flex-1 flex-col min-w-0 overflow-hidden ${
 				isMobilePanelOpen 
 					? (isSenderCardOpen && selectedEmailId ? "hidden md:flex" : "flex") 
-					: "hidden"
-			} w-full md:w-[600px] xl:w-[700px] shrink-0 bg-sh-bg-dark border-l border-sh-border`}>
+					: "hidden md:flex"
+			} w-full md:w-auto`}>
 				{isComposing && !selectedEmailId ? (
 					<ComposePanel />
 				) : isComposing && selectedEmailId ? (
@@ -59,18 +57,22 @@ export default function MailboxSplitView({
 					</div>
 				) : selectedEmailId ? (
 					<EmailPanel emailId={selectedEmailId} />
-				) : null}
+				) : (
+					<div className="flex items-center justify-center h-full text-sh-text-muted text-[13px]">
+						Select a conversation
+					</div>
+				)}
 			</div>
 
 			{/* Resize Handle between email view and sender card */}
-			{selectedEmailId && isSenderCardOpen && (
+			{selectedEmailId && (
 				<div className="hidden md:block w-[1px] bg-sh-border cursor-col-resize hover:bg-sh-accent transition-colors shrink-0" />
 			)}
 
 			{/* Right Pane: Sender Card */}
-			{selectedEmailId && isSenderCardOpen && (
+			{selectedEmailId && (
 				<div
-					className={`flex flex-col min-w-0 shrink-0 ${isSenderCardOpen ? "flex" : "hidden md:flex"} w-full md:w-72 bg-sh-bg-panel border-l border-sh-border`}
+					className={`flex flex-col min-w-0 shrink-0 ${isSenderCardOpen ? "flex" : "hidden md:flex"} w-full md:w-72 bg-sh-bg-panel`}
 				>
 					<SenderCard emailId={selectedEmailId} />
 				</div>
