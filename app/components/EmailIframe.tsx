@@ -95,7 +95,7 @@ export default function EmailIframe({ body, autoSize }: EmailIframeProps) {
 <style>
 * { box-sizing: border-box; }
 html {
-	background: #111111;
+	background: transparent;
 	color-scheme: dark;
 }
 body {
@@ -103,7 +103,7 @@ body {
 	font-size: 13px;
 	line-height: 1.4;
 	color: #ffffff;
-	background: #111111;
+	background: transparent;
 	padding: ${padding};
 	margin: 0;
 	word-wrap: break-word;
