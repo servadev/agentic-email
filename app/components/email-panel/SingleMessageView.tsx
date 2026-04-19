@@ -19,7 +19,7 @@ export default function SingleMessageView({
 	onPreviewImage,
 }: SingleMessageViewProps) {
 	return (
-		<div className="flex flex-col h-full bg-sh-bg-dark text-sh-text-white">
+		<div className="flex flex-col h-full bg-transparent text-sh-text-white">
 			<div className="px-4 py-4 border-b border-sh-border md:px-6">
 				<div className="flex items-center justify-between gap-3">
 					<div className="flex items-center gap-2.5 min-w-0">
