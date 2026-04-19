@@ -4,6 +4,8 @@
 
 import { FloppyDiskIcon, PaperPlaneTiltIcon, XIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router";
+import { useUIStore } from "~/hooks/useUIStore";
+import { formatComposeDate } from "~/lib/utils";
 import { useComposeForm } from "~/hooks/useComposeForm";
 import RichTextEditor from "./RichTextEditor";
 
@@ -12,6 +14,9 @@ export default function ComposePanel() {
 		mailboxId: string;
 		folder: string;
 	}>();
+
+	const { composeOptions } = useUIStore();
+	const originalEmail = composeOptions.originalEmail;
 
 	const {
 		to,
@@ -56,6 +61,18 @@ export default function ComposePanel() {
 					</button>
 				</div>
 			</div>
+
+			{originalEmail && (
+				<div className="px-4 md:px-6 py-3 border-b border-sh-border shrink-0 bg-sh-bg-panel text-[12px] overflow-y-auto max-h-[150px]">
+					<div className="font-medium text-sh-text-muted mb-1 flex items-center justify-between">
+						<span>Replying to {originalEmail?.sender || "Unknown Sender"}</span>
+						<span className="text-[11px]">{originalEmail?.date ? formatComposeDate(originalEmail.date) : ""}</span>
+					</div>
+					<div className="text-sh-text-read line-clamp-3 overflow-hidden text-ellipsis italic opacity-80 border-l-2 border-sh-border-thin pl-3">
+						"{originalEmail?.snippet || "No preview available"}"
+					</div>
+				</div>
+			)}
 
 			<form
 				onSubmit={(e) => handleSend(e, closePanel)}

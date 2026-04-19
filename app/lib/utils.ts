@@ -168,7 +168,7 @@ export function buildQuotedReplyBlock(
 	// execute. Convert to escaped plain text instead.
 	const bodyToQuote = escapeHtml(stripHtml(body)).replace(/\n/g, "<br>");
 
-	return `<br><details><summary style="cursor: pointer; color: #888; font-size: 12px; margin-top: 1em; user-select: none;">Show quoted text</summary><blockquote style="border-left: 2px solid #ccc; margin: 0; padding-left: 1em; color: #666; margin-top: 8px;">On ${formattedDate}, ${escapedSender} wrote:<br><br>${bodyToQuote}</blockquote></details>`;
+	return `<br><blockquote style="border-left: 2px solid #ccc; margin: 0; padding-left: 1em; color: #666;">On ${formattedDate}, ${escapedSender} wrote:<br><br>${bodyToQuote}</blockquote>`;
 }
 
 /**
