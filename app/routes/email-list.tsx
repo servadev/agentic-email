@@ -386,7 +386,7 @@ export default function EmailListRoute() {
 		});
 
 		centerPane = (
-			<div className="flex flex-col h-full bg-sh-bg-panel">
+			<div className="flex flex-col h-full bg-transparent">
 				<div className="px-6 py-4 border-b border-sh-border flex items-center justify-between shrink-0">
 					<h2 className="text-[14px] font-semibold text-sh-text-white truncate">Conversations with {contacts.find(c => c.emailAddress === normalizedSelectedContact)?.displayName || selectedContact}</h2>
 				</div>

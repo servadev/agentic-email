@@ -50,7 +50,7 @@ export default function MailboxSplitView({
 				<>
 					<div className="hidden md:block w-[1px] bg-sh-border cursor-col-resize hover:bg-sh-accent transition-colors shrink-0" />
 					<div
-						className={`flex flex-col min-w-0 shrink-0 ${isSenderCardOpen ? "flex" : "hidden md:flex"} w-full md:w-72 bg-sh-bg-panel`}
+						className={`flex flex-col min-w-0 shrink-0 ${isSenderCardOpen ? "flex" : "hidden md:flex"} w-full md:w-72 bg-transparent`}
 					>
 						{rightPane}
 					</div>

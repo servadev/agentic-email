@@ -65,7 +65,7 @@ export default function SenderCard({ contactEmail }: { contactEmail: string }) {
 	const initial = displayName.charAt(0).toUpperCase() || "?";
 
 	return (
-		<div className="flex flex-col h-full bg-sh-bg-panel text-sh-text-white relative">
+		<div className="flex flex-col h-full bg-transparent text-sh-text-white relative">
 			{/* Mobile back button */}
 			<div className="md:hidden absolute top-3 left-3">
 				<button

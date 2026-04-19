@@ -67,7 +67,7 @@ export const useUIStore = create<UIState>((set, get) => ({
 	composeOptions: { mode: "new", originalEmail: null },
 	isComposeModalOpen: false,
 	isSidebarOpen: false,
-	isAgentPanelOpen: true,
+	isAgentPanelOpen: false,
 	isSenderCardOpen: false,
 
 	selectEmail: (id) => set({ selectedEmailId: id, selectedThreadId: id, isComposing: false }),
