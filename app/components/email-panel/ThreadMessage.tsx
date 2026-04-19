@@ -10,6 +10,7 @@ import {
 	PaperPlaneTiltIcon,
 	PencilSimpleIcon,
 	TrashIcon,
+	ArrowBendUpLeftIcon,
 } from "@phosphor-icons/react";
 import EmailAttachmentList from "~/components/EmailAttachmentList";
 import EmailIframe from "~/components/EmailIframe";
@@ -33,6 +34,7 @@ interface ThreadMessageProps {
 	onSendDraft?: () => void;
 	onEditDraft?: () => void;
 	onDeleteDraft?: () => void;
+	onReply?: () => void;
 	onViewSource?: () => void;
 	onPreviewImage?: (url: string, filename: string) => void;
 }
@@ -65,6 +67,7 @@ export default function ThreadMessage({
 	onSendDraft,
 	onEditDraft,
 	onDeleteDraft,
+	onReply,
 	onViewSource,
 	onPreviewImage,
 }: ThreadMessageProps) {
@@ -131,6 +134,13 @@ export default function ThreadMessage({
 						<span className="text-[12px] text-sh-text-muted mr-2">
 							{formatShortDate(email.date)}
 						</span>
+						{onReply && (
+							<Tooltip content="Reply" side="bottom" asChild>
+								<button type="button" onClick={onReply} aria-label="Reply" className={iconBtnClass}>
+									<ArrowBendUpLeftIcon size={14} />
+								</button>
+							</Tooltip>
+						)}
 						{onViewSource && (
 							<Tooltip content="View source" side="bottom" asChild>
 								<button type="button" onClick={onViewSource} aria-label="View source" className={iconBtnClass}>

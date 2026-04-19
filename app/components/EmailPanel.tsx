@@ -232,6 +232,7 @@ export default function EmailPanel({ emailId, customThreadIds }: { emailId: stri
 								onSendDraft={isDraft ? () => handleSendDraft(msg) : undefined}
 								onEditDraft={isDraft ? () => handleEditDraft(msg) : undefined}
 								onDeleteDraft={isDraft ? () => handleDeleteDraft(msg) : undefined}
+								onReply={!isDraft && idx === allMessages.length - 1 ? () => startCompose({ mode: "reply", originalEmail: msg }) : undefined}
 								onViewSource={() => setSourceViewEmail(msg)}
 								onPreviewImage={(url, filename) =>
 									setPreviewImage({ url, filename })
