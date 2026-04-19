@@ -143,6 +143,42 @@ function FolderEmptyState({
 	);
 }
 
+function useContactThreadIds(
+	selectedContact: string | null,
+	selectedEmailId: string | null,
+	allEmails: Email[],
+	folder: string | undefined
+) {
+	return useMemo(() => {
+		if (!selectedContact || !selectedEmailId) return undefined;
+		
+		return Array.from(new Set(allEmails.filter(e => {
+			const normalizedContact = selectedContact.toLowerCase();
+			let contactStr = e.sender;
+			if (folder === Folders.SENT || e.folder_id === Folders.SENT) {
+				const recipients = e.recipient ? e.recipient.split(",") : [];
+				if (recipients.length > 0) contactStr = recipients[0].trim();
+			}
+			const { emailAddress } = parseSenderInfo(contactStr);
+			const eAddress = emailAddress || contactStr.split("@")[0] || "";
+			if (eAddress.toLowerCase() !== normalizedContact) return false;
+			
+			const selectedEmail = allEmails.find(se => se.id === selectedEmailId);
+			if (!selectedEmail) return false;
+			
+			let subject = e.subject || "";
+			subject = subject.replace(/^((re|fwd|fw|aw):\s*)+/ig, "").trim();
+			const groupKey = subject.toLowerCase() || "(no subject)";
+			
+			let selSubject = selectedEmail.subject || "";
+			selSubject = selSubject.replace(/^((re|fwd|fw|aw):\s*)+/ig, "").trim();
+			const selGroupKey = selSubject.toLowerCase() || "(no subject)";
+			
+			return groupKey === selGroupKey && !!e.thread_id;
+		}).map(e => e.thread_id!)));
+	}, [selectedContact, selectedEmailId, allEmails, folder]);
+}
+
 export default function EmailListRoute() {
 	const { mailboxId, folder } = useParams<{
 		mailboxId: string;
@@ -213,6 +249,8 @@ export default function EmailListRoute() {
 		if (found) return found.name;
 		return folder ? folder.charAt(0).toUpperCase() + folder.slice(1) : "Inbox";
 	}, [folders, folder]);
+
+	const customThreadIds = useContactThreadIds(selectedContact, selectedEmailId, allEmails, folder);
 
 	// Track folder identity to detect folder changes vs page changes
 	const prevFolderRef = useRef<string | undefined>(undefined);
@@ -393,7 +431,7 @@ export default function EmailListRoute() {
 		centerPane = (
 			<div className="flex flex-col h-full overflow-hidden">
 				<div className="flex-1 overflow-y-auto min-h-0 border-b border-sh-border">
-					<EmailPanel emailId={selectedEmailId} />
+					<EmailPanel emailId={selectedEmailId} customThreadIds={customThreadIds} />
 				</div>
 				<div className="shrink-0 max-h-[50%] overflow-y-auto shadow-[0_-4px_20px_rgba(0,0,0,0.3)] z-10">
 					<ComposePanel />
@@ -401,7 +439,7 @@ export default function EmailListRoute() {
 			</div>
 		);
 	} else if (selectedEmailId) {
-		centerPane = <EmailPanel emailId={selectedEmailId} />;
+		centerPane = <EmailPanel emailId={selectedEmailId} customThreadIds={customThreadIds} />;
 	} else if (selectedContact) {
 		const normalizedSelectedContact = selectedContact.toLowerCase();
 		
@@ -421,16 +459,13 @@ export default function EmailListRoute() {
 			const eAddress = emailAddress || contactStr.split("@")[0] || "";
 			
 			if (eAddress.toLowerCase() === normalizedSelectedContact) {
-				// Determine a grouping key. Prefer thread_id if available.
-				// If no thread_id, use subject, but strip prefixes like "Re:", "Fwd:", etc.
-				let groupKey = e.thread_id;
-				if (!groupKey) {
-					let subject = e.subject || "";
-					// Strip out any amount of Re:, Fwd:, etc., even multiple ones like "Re: Fwd: Re: Lunch"
-					subject = subject.replace(/^((re|fwd|fw|aw):\s*)+/ig, "").trim();
-					// If the subject is empty after stripping, just use "(no subject)"
-					groupKey = subject.toLowerCase() || "(no subject)";
-				}
+				// We group purely by normalized subject to ensure replies always stay together in the contact view,
+				// because the backend's thread_id can sometimes be inconsistent across sent/received boundaries.
+				let subject = e.subject || "";
+				// Strip out any amount of Re:, Fwd:, etc., even multiple ones like "Re: Fwd: Re: Lunch"
+				subject = subject.replace(/^((re|fwd|fw|aw):\s*)+/ig, "").trim();
+				// If the subject is empty after stripping, just use "(no subject)"
+				const groupKey = subject.toLowerCase() || "(no subject)";
 
 				const existing = groupedThreadsMap.get(groupKey);
 				if (!existing) {

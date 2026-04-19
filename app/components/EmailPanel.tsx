@@ -5,6 +5,7 @@
 import { useKumoToastManager } from "@cloudflare/kumo";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { Folders } from "shared/folders";
 import EmailPanelDialogs from "~/components/email-panel/EmailPanelDialogs";
 import EmailPanelHeader from "~/components/email-panel/EmailPanelHeader";
@@ -13,6 +14,7 @@ import SingleMessageView from "~/components/email-panel/SingleMessageView";
 import ThreadMessage from "~/components/email-panel/ThreadMessage";
 import { splitEmailList, toEmailListValue } from "~/lib/utils";
 import api from "~/services/api";
+import { queryKeys } from "~/queries/keys";
 import { useDeleteEmail, useEmail, useMoveEmail, useReplyToEmail, useSendEmail, useThreadReplies, useUpdateEmail } from "~/queries/emails";
 import { useFolders } from "~/queries/folders";
 import { useMailbox } from "~/queries/mailboxes";
@@ -29,12 +31,43 @@ function EmailPanelSkeleton() {
 	);
 }
 
-export default function EmailPanel({ emailId }: { emailId: string }) {
+export default function EmailPanel({ emailId, customThreadIds }: { emailId: string, customThreadIds?: string[] }) {
 	const { mailboxId, folder } = useParams<{ mailboxId: string; folder: string }>();
+	const queryClient = useQueryClient();
 	const { data: email } = useEmail(mailboxId, emailId) as { data?: Email };
-	const { data: threadRepliesRaw } = useThreadReplies(mailboxId, email?.thread_id) as {
-		data?: Email[];
-	};
+	
+	const threadIdsToFetch = useMemo(() => {
+		if (customThreadIds && customThreadIds.length > 0) return customThreadIds;
+		if (email?.thread_id) return [email.thread_id];
+		return [];
+	}, [customThreadIds, email?.thread_id]);
+
+	const threadQueries = useQueries({
+		queries: threadIdsToFetch.map(tid => ({
+			queryKey: queryKeys.emails.thread(mailboxId!, tid),
+			queryFn: async ({ signal }: { signal?: AbortSignal }) => {
+				const emails = await api.getThread(mailboxId!, tid, { signal }) as Email[];
+				for (const e of emails) {
+					queryClient.setQueryData(queryKeys.emails.detail(mailboxId!, e.id), e);
+				}
+				return emails;
+			},
+			enabled: !!mailboxId && !!tid,
+			retry: 2,
+			retryDelay: attempt => attempt * 1000,
+		}))
+	});
+
+	const threadRepliesRaw = useMemo(() => {
+		const all = new Map<string, Email>();
+		threadQueries.forEach(q => {
+			if (q.data) {
+				q.data.forEach(e => all.set(e.id, e));
+			}
+		});
+		return Array.from(all.values());
+	}, [threadQueries]);
+
 	const updateEmail = useUpdateEmail();
 	const deleteEmailMut = useDeleteEmail();
 	const moveEmailMut = useMoveEmail();
