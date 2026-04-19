@@ -147,6 +147,9 @@ const api = {
 	forwardEmail: (mailboxId: string, emailId: string, email: unknown) =>
 		post<void>(`/api/v1/mailboxes/${mailboxId}/emails/${emailId}/forward`, email),
 
+	// AI Assist
+	draftAI: (mailboxId: string, prompt: string, originalEmailText?: string) => post<{ draft: string }>(`/api/v1/mailboxes/${mailboxId}/draft-ai`, { prompt, originalEmailText }),
+
 	// Folders
 	listFolders: (mailboxId: string) =>
 		get<Folder[]>(`/api/v1/mailboxes/${mailboxId}/folders`),

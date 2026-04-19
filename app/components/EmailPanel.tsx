@@ -167,6 +167,7 @@ export default function EmailPanel({ emailId, customThreadIds }: { emailId: stri
 		} catch (err) {
 			const message = (err instanceof Error ? err.message : null) || "Failed to send email.";
 			toastManager.add({ title: message, variant: "error" });
+			throw err;
 		} finally { setIsSending(false); }
 	};
 
@@ -181,7 +182,7 @@ export default function EmailPanel({ emailId, customThreadIds }: { emailId: stri
 				isSending={isSending}
 				moveToFolders={moveToFolders}
 				onBack={closeThread}
-				onSendDraft={() => handleSendDraft()}
+				onSendDraft={() => handleSendDraft().catch((err) => { console.error("EmailPanel Toolbar handleSendDraft failed:", err); })}
 				onEditDraft={() => handleEditDraft()}
 				onReply={() =>
 					startCompose({ mode: "reply", originalEmail: lastReceivedMessage })
@@ -229,7 +230,7 @@ export default function EmailPanel({ emailId, customThreadIds }: { emailId: stri
 								isSending={isDraft ? isSending : false}
 								isExpanded={expandedMessages.has(msg.id)}
 								onToggleExpand={() => toggleExpand(msg.id)}
-								onSendDraft={isDraft ? () => handleSendDraft(msg) : undefined}
+								onSendDraft={isDraft ? () => handleSendDraft(msg).catch((err) => { console.error("ThreadMessage handleSendDraft failed:", err); }) : undefined}
 								onEditDraft={isDraft ? () => handleEditDraft(msg) : undefined}
 								onDeleteDraft={isDraft ? () => handleDeleteDraft(msg) : undefined}
 								onReply={!isDraft && idx === allMessages.length - 1 ? () => startCompose({ mode: "reply", originalEmail: msg }) : undefined}

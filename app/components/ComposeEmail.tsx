@@ -47,7 +47,7 @@ export default function ComposeEmail() {
 				<Dialog.Title className="text-lg font-semibold mb-5">
 					{formTitle}
 				</Dialog.Title>
-				<form onSubmit={(e) => handleSend(e, closeComposeModal)} className="space-y-4">
+				<form onSubmit={(e) => { e.preventDefault(); handleSend(e).then(() => closeComposeModal()).catch((err) => { console.error("ComposeEmail handleSend failed:", err); }); }} className="space-y-4">
 					{error && <Banner variant="error" text={error} />}
 					<div className="flex items-center gap-2">
 						<div className="flex-1">

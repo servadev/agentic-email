@@ -20,6 +20,8 @@ import { handleReplyEmail, handleForwardEmail } from "./routes/reply-forward";
 import { Folders } from "../shared/folders";
 import type { Env } from "./types";
 import { requireMailbox, type MailboxContext } from "./lib/mailbox";
+import { createWorkersAI } from "workers-ai-provider";
+import { generateText } from "ai";
 
 type AppContext = Context<MailboxContext>;
 
@@ -270,6 +272,63 @@ app.post("/api/v1/mailboxes/:mailboxId/threads/:threadId/read", async (c: AppCon
 
 app.post("/api/v1/mailboxes/:mailboxId/emails/:id/reply", handleReplyEmail);
 app.post("/api/v1/mailboxes/:mailboxId/emails/:id/forward", handleForwardEmail);
+
+// -- AI Assist ------------------------------------------------------
+
+app.post("/api/v1/mailboxes/:mailboxId/draft-ai", async (c: AppContext) => {
+	const mailboxId = c.req.param("mailboxId")!;
+	const { prompt, originalEmailText } = await c.req.json() as { prompt: string, originalEmailText?: string };
+	
+	// Input validation
+	if (!prompt || prompt.trim().length < 5) {
+		return c.json({ error: "Prompt too short. Please provide more details." }, 400);
+	}
+	if (prompt.length > 2000) {
+		return c.json({ error: "Prompt too long. Please keep it under 2000 characters." }, 400);
+	}
+
+	try {
+		const workersai = createWorkersAI({ binding: c.env.AI });
+		
+		let customPrompt = "";
+		try {
+			const obj = await c.env.BUCKET.get(`mailboxes/${mailboxId}.json`);
+			if (obj) {
+				const data = await obj.json() as { agentSystemPrompt?: string };
+				if (data.agentSystemPrompt?.trim()) {
+					customPrompt = data.agentSystemPrompt;
+				}
+			}
+		} catch (e) {
+			console.warn(`Failed to read custom prompt for ${mailboxId}:`, e);
+		}
+
+		const systemPrompt = `You are a professional email drafting assistant. Draft a complete email based on the user's instructions.
+${customPrompt ? `\nYour specific persona and style guide:\n${customPrompt}\n` : ""}
+Write directly what the user should send. Do NOT include any meta-commentary, introductory text, or concluding remarks like "Here is your draft".
+Just the email body. Format it with standard paragraphs and line breaks. No markdown formatting.`;
+
+		const userPrompt = originalEmailText 
+			? `Context - The email I am replying to:
+${originalEmailText}
+
+My instructions for the reply:
+${prompt}`
+			: `My instructions for the new email:
+${prompt}`;
+
+		const result = await generateText({
+			model: workersai("@cf/moonshotai/kimi-k2.5"),
+			system: systemPrompt,
+			prompt: userPrompt,
+		});
+
+		return c.json({ draft: result.text });
+	} catch (e) {
+		console.error("AI Draft failed:", (e as Error).message);
+		return c.json({ error: "Failed to generate AI draft" }, 500);
+	}
+});
 
 // -- Folders --------------------------------------------------------
 
