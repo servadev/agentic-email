@@ -68,6 +68,38 @@ export default function EmailIframe({ body, autoSize }: EmailIframeProps) {
 
 		const padding = autoSize ? "0" : "24px";
 
+		// JS injected to find common quote containers and hide them behind a toggle
+		const hideQuotesScript = `<script>
+			function hideQuotes() {
+				// Common selectors for quoted email trails
+				var quoteSelectors = [
+					'div.gmail_quote',
+					'blockquote[type="cite"]',
+					'div.moz-cite-prefix',
+					'div.yahoo_quoted',
+					'div#appendonsend'
+				];
+				
+				var quotes = document.querySelectorAll(quoteSelectors.join(','));
+				quotes.forEach(function(quote) {
+					if (quote.dataset.collapsed === "true") return; // already processed
+					quote.dataset.collapsed = "true";
+					
+					var wrapper = document.createElement('details');
+					var summary = document.createElement('summary');
+					summary.innerHTML = '<span class="quote-toggle-dots">•••</span>';
+					summary.className = 'quote-summary';
+					
+					// Insert wrapper before the quote, move quote inside wrapper
+					quote.parentNode.insertBefore(wrapper, quote);
+					wrapper.appendChild(summary);
+					wrapper.appendChild(quote);
+				});
+			}
+			hideQuotes();
+			setTimeout(hideQuotes, 100);
+		</script>`;
+
 		// Height-reporting script: sends body.scrollHeight to the parent.
 		// Runs inside the opaque-origin sandbox so it has zero access to
 		// the parent page — it can only postMessage.
@@ -133,9 +165,27 @@ td, th { padding: 4px 8px; border: 1px solid #333333; }
 p { margin: 4px 0; }
 h1, h2, h3 { margin: 8px 0 4px; color: #ffffff; }
 ul, ol { padding-left: 20px; margin: 4px 0; }
+
+details { margin-top: 12px; }
+summary.quote-summary { 
+	cursor: pointer; 
+	list-style: none; 
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.08);
+	transition: background 0.15s ease;
+	font-size: 11px;
+	color: #aaaaaa;
+}
+summary.quote-summary::-webkit-details-marker { display: none; }
+summary.quote-summary:hover { background: rgba(255, 255, 255, 0.15); }
+.quote-toggle-dots { letter-spacing: 2px; line-height: 1; margin-bottom: 2px; }
+
 </style>
 </head>
-<body>${cleanBody}${heightScript}</body>
+<body>${cleanBody}${hideQuotesScript}${heightScript}</body>
 </html>`;
 	}, [body, autoSize]);
 

@@ -134,7 +134,7 @@ function buildInitialComposeFields(
 			...EMPTY_FIELDS,
 			to: original.sender,
 			subject: getPrefixedSubject(original.subject, "Re"),
-			body: `<p><br></p>${sigBlock ? `${sigBlock}<br>` : ""}${buildQuotedReplyBlock(original.date, original.sender, original.body || "")}`,
+			body: `<p><br></p>${sigBlock ? `${sigBlock}<br>` : ""}<div style="display:none;" class="agentic-email-thread-context">${buildQuotedReplyBlock(original.date, original.sender, original.body || "")}</div>`,
 		};
 	}
 
@@ -144,7 +144,7 @@ function buildInitialComposeFields(
 			...EMPTY_FIELDS,
 			...recipients,
 			subject: getPrefixedSubject(original.subject, "Re"),
-			body: `<p><br></p>${sigBlock ? `${sigBlock}<br>` : ""}${buildQuotedReplyBlock(original.date, original.sender, original.body || "")}`,
+			body: `<p><br></p>${sigBlock ? `${sigBlock}<br>` : ""}<div style="display:none;" class="agentic-email-thread-context">${buildQuotedReplyBlock(original.date, original.sender, original.body || "")}</div>`,
 		};
 	}
 
