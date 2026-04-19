@@ -434,7 +434,7 @@ export default function EmailListRoute() {
 					<EmailPanel emailId={selectedEmailId} customThreadIds={customThreadIds} />
 				</div>
 				{/* Overlay compose panel taking up most of the height for full editing capability */}
-				<div className="absolute bottom-0 left-0 right-0 h-[90%] flex flex-col shadow-[0_-10px_50px_rgba(0,0,0,0.6)] z-20 rounded-t-[8px] border-t border-x border-sh-border overflow-hidden bg-gradient-to-br from-[#1a1b33] via-[#1a1226] to-[#2d152a] backdrop-blur-xl">
+				<div className="absolute bottom-0 left-0 right-0 h-[70%] flex flex-col shadow-[0_-10px_50px_rgba(0,0,0,0.6)] z-20 rounded-t-[8px] border-t border-x border-sh-border overflow-hidden bg-gradient-to-br from-[#1a1b33] via-[#1a1226] to-[#2d152a] backdrop-blur-xl">
 					<ComposePanel />
 				</div>
 			</div>
