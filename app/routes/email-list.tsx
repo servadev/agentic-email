@@ -433,7 +433,7 @@ export default function EmailListRoute() {
 				<div className="flex-1 overflow-y-auto min-h-0 border-b border-sh-border">
 					<EmailPanel emailId={selectedEmailId} customThreadIds={customThreadIds} />
 				</div>
-				<div className="shrink-0 max-h-[50%] overflow-y-auto shadow-[0_-4px_20px_rgba(0,0,0,0.3)] z-10">
+				<div className="h-[50%] flex flex-col shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.3)] z-10">
 					<ComposePanel />
 				</div>
 			</div>

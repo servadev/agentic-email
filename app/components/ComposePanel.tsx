@@ -59,9 +59,9 @@ export default function ComposePanel() {
 
 			<form
 				onSubmit={(e) => handleSend(e, closePanel)}
-				className="flex flex-col flex-1 min-h-0 overflow-y-auto no-scrollbar"
+				className="flex flex-col flex-1 min-h-0"
 			>
-				<div className="p-4 md:p-6 space-y-4">
+				<div className="p-4 md:p-6 space-y-4 flex-1 flex flex-col min-h-0 overflow-y-auto no-scrollbar">
 					{error && (
 						<div className="flex items-center gap-2 px-3 py-2 rounded-[2px] bg-red-500/10 border border-red-500/20 text-red-400 text-[12px]">
 							<WarningCircleIcon size={16} />
@@ -146,7 +146,7 @@ export default function ComposePanel() {
 						</div>
 					</div>
 
-					<div className="border border-sh-border-thin rounded-[2px] overflow-hidden bg-sh-bg-panel">
+					<div className="border border-sh-border-thin rounded-[2px] overflow-hidden bg-sh-bg-panel flex-1 flex flex-col min-h-[200px]">
 						<RichTextEditor
 							value={body}
 							onChange={setBody}
@@ -155,7 +155,7 @@ export default function ComposePanel() {
 				</div>
 
 				{/* Footer actions */}
-				<div className="mt-auto px-4 py-3 border-t border-sh-border shrink-0 md:px-6">
+				<div className="mt-auto px-4 py-3 border-t border-sh-border shrink-0 md:px-6 bg-sh-bg-dark">
 					<div className="flex items-center justify-between">
 						<button 
 							type="button" 
