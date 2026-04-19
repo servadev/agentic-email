@@ -429,11 +429,12 @@ export default function EmailListRoute() {
 		centerPane = <ComposePanel />;
 	} else if (isComposing && selectedEmailId) {
 		centerPane = (
-			<div className="flex flex-col h-full overflow-hidden">
-				<div className="flex-1 overflow-y-auto min-h-0 border-b border-sh-border">
+			<div className="relative flex flex-col h-full overflow-hidden">
+				<div className="flex-1 overflow-y-auto min-h-0">
 					<EmailPanel emailId={selectedEmailId} customThreadIds={customThreadIds} />
 				</div>
-				<div className="h-[50%] flex flex-col shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.3)] z-10">
+				{/* Overlay compose panel taking up most of the height for full editing capability */}
+				<div className="absolute bottom-0 left-0 right-0 h-[90%] flex flex-col shadow-[0_-10px_50px_rgba(0,0,0,0.6)] z-20 rounded-t-[8px] border-t border-x border-sh-border overflow-hidden bg-sh-bg-dark">
 					<ComposePanel />
 				</div>
 			</div>
