@@ -356,10 +356,12 @@ export default function EmailListRoute() {
 		centerPane = <ComposePanel />;
 	} else if (isComposing && selectedEmailId) {
 		centerPane = (
-			<div className="flex flex-col h-full overflow-y-auto">
-				<ComposePanel />
-				<div className="border-t border-sh-border">
+			<div className="flex flex-col h-full overflow-hidden">
+				<div className="flex-1 overflow-y-auto min-h-0 border-b border-sh-border">
 					<EmailPanel emailId={selectedEmailId} />
+				</div>
+				<div className="shrink-0 max-h-[50%] overflow-y-auto shadow-[0_-4px_20px_rgba(0,0,0,0.3)] z-10">
+					<ComposePanel />
 				</div>
 			</div>
 		);
@@ -367,12 +369,37 @@ export default function EmailListRoute() {
 		centerPane = <EmailPanel emailId={selectedEmailId} />;
 	} else if (selectedContact) {
 		const normalizedSelectedContact = selectedContact.toLowerCase();
-		const contactThreads = emails.filter(e => {
-			const senderStr = e.sender || "";
-			const match = senderStr.match(/(.*)<(.*)>/);
-			const emailAddress = match ? match[2].trim() : senderStr;
-			return emailAddress.toLowerCase() === normalizedSelectedContact;
+		
+		// Map to store grouped threads, keyed by a normalized thread identifier (either thread_id or normalized subject)
+		const groupedThreadsMap = new Map<string, Email>();
+
+		emails.forEach(e => {
+			const { emailAddress } = parseSenderInfo(e.sender);
+			const eAddress = emailAddress || e.sender.split("@")[0] || "";
+			
+			if (eAddress.toLowerCase() === normalizedSelectedContact) {
+				// Determine a grouping key. Prefer thread_id if available.
+				// If no thread_id, use subject, but strip prefixes like "Re:", "Fwd:", etc.
+				let groupKey = e.thread_id;
+				if (!groupKey) {
+					const subject = e.subject || "";
+					groupKey = subject.replace(/^(re|fwd|fw|aw):\s*/i, "").trim().toLowerCase();
+				}
+
+				const existing = groupedThreadsMap.get(groupKey);
+				if (!existing) {
+					groupedThreadsMap.set(groupKey, e);
+				} else {
+					// Keep the most recent email for the thread display
+					if (new Date(e.date).getTime() > new Date(existing.date).getTime()) {
+						groupedThreadsMap.set(groupKey, e);
+					}
+				}
+			}
 		});
+
+		// Convert map values to array and sort by most recent
+		const contactThreads = Array.from(groupedThreadsMap.values()).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 		centerPane = (
 			<div className="flex flex-col h-full bg-transparent">
