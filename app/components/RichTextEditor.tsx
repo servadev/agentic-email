@@ -6,6 +6,7 @@ import { Tooltip } from "@cloudflare/kumo";
 import {
 	ArrowClockwiseIcon,
 	ArrowCounterClockwiseIcon,
+	CaretDownIcon,
 	LinkBreakIcon,
 	LinkSimpleIcon,
 	ListBulletsIcon,
@@ -26,7 +27,31 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { Node, mergeAttributes } from "@tiptap/core";
 import { useCallback, useEffect } from "react";
+
+const Details = Node.create({
+	name: "details",
+	group: "block",
+	content: "summary block+",
+	parseHTML() {
+		return [{ tag: "details" }];
+	},
+	renderHTML({ HTMLAttributes }) {
+		return ["details", mergeAttributes(HTMLAttributes), 0];
+	},
+});
+
+const Summary = Node.create({
+	name: "summary",
+	content: "text*",
+	parseHTML() {
+		return [{ tag: "summary" }];
+	},
+	renderHTML({ HTMLAttributes }) {
+		return ["summary", mergeAttributes(HTMLAttributes), 0];
+	},
+});
 
 interface RichTextEditorProps {
 	value: string;
@@ -47,6 +72,8 @@ export default function RichTextEditor({
 			TextStyle,
 			Color,
 			Highlight.configure({ multicolor: true }),
+			Details,
+			Summary,
 		],
 		content: value,
 		editorProps: {
@@ -63,10 +90,10 @@ export default function RichTextEditor({
 	useEffect(() => {
 		if (editor && !editor.isDestroyed && value !== editor.getHTML()) {
 			editor.commands.setContent(value);
-			// Place cursor at the start of the document (above quoted text)
+			// Place cursor at the end of the document (below quoted text)
 			const rafId = requestAnimationFrame(() => {
 				if (!editor.isDestroyed) {
-					editor.commands.focus('start');
+					editor.commands.focus('end');
 				}
 			});
 			return () => cancelAnimationFrame(rafId);
@@ -182,6 +209,20 @@ export default function RichTextEditor({
 						icon={<QuotesIcon size={16} />}
 						onClick={() => editor.chain().focus().toggleBlockquote().run()}
 						ariaLabel="Blockquote"
+					/>
+				</Tooltip>
+				<Tooltip content="Details Block" side="bottom" asChild>
+					<ToolbarButton
+						active={editor.isActive("details")}
+						icon={<CaretDownIcon size={16} />}
+						onClick={() => {
+							if (editor.isActive("details")) {
+								editor.chain().focus().lift("details").run();
+							} else {
+								editor.chain().focus().insertContent("<details><summary>Details</summary><p>Content...</p></details>").run();
+							}
+						}}
+						ariaLabel="Details Block"
 					/>
 				</Tooltip>
 				<Tooltip content="Link" side="bottom" asChild>
