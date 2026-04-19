@@ -177,7 +177,7 @@ export default function EmailListRoute() {
 	const {
 		data: emailData,
 		isFetching: isRefreshing,
-	} = useEmails(mailboxId, params, { refetchInterval: 30_000 });
+	} = useEmails(mailboxId, params, { refetchInterval: 10_000 });
 
 	const emails = emailData?.emails ?? [];
 	const totalCount = emailData?.totalCount ?? 0;
@@ -265,7 +265,18 @@ export default function EmailListRoute() {
 		const map = new Map<string, { emailAddress: string; displayName: string; latestEmail: Email; threadCount: number; unreadCount: number }>();
 		
 		emails.forEach(email => {
-			const { displayName, emailAddress } = parseSenderInfo(email.sender);
+			// Check if the contact is the sender OR the recipient (for sent emails)
+			// If it's a sent email (we are the sender), group it by the recipient instead
+			let contactStr = email.sender;
+			if (folder === Folders.SENT || email.folder_id === Folders.SENT) {
+				// Use the first recipient as the contact for grouping sent emails
+				const recipients = email.recipient ? email.recipient.split(",") : [];
+				if (recipients.length > 0) {
+					contactStr = recipients[0].trim();
+				}
+			}
+
+			const { displayName, emailAddress } = parseSenderInfo(contactStr);
 			
 			// Normalize email address to lowercase early on
 			const normalizedEmailAddress = emailAddress.toLowerCase();
@@ -374,8 +385,16 @@ export default function EmailListRoute() {
 		const groupedThreadsMap = new Map<string, Email>();
 
 		emails.forEach(e => {
-			const { emailAddress } = parseSenderInfo(e.sender);
-			const eAddress = emailAddress || e.sender.split("@")[0] || "";
+			let contactStr = e.sender;
+			if (folder === Folders.SENT || e.folder_id === Folders.SENT) {
+				const recipients = e.recipient ? e.recipient.split(",") : [];
+				if (recipients.length > 0) {
+					contactStr = recipients[0].trim();
+				}
+			}
+
+			const { emailAddress } = parseSenderInfo(contactStr);
+			const eAddress = emailAddress || contactStr.split("@")[0] || "";
 			
 			if (eAddress.toLowerCase() === normalizedSelectedContact) {
 				// Determine a grouping key. Prefer thread_id if available.
