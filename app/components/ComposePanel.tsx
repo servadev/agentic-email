@@ -39,7 +39,7 @@ export default function ComposePanel() {
 	const inputClass = "w-full bg-sh-search-bg border border-sh-border-thin rounded-[2px] px-2.5 py-1.5 text-sh-base text-sh-text-white placeholder-sh-search-placeholder outline-none focus:border-sh-text-muted focus:ring-2 focus:ring-sh-accent transition-colors";
 
 	return (
-		<div className="flex flex-col h-full bg-sh-bg-dark text-sh-text-white">
+		<div className="flex flex-col h-full bg-transparent text-sh-text-white">
 			<div className="flex items-center justify-between px-4 py-3 border-b border-sh-border shrink-0 md:px-6">
 				<h2 className="text-[13px] font-semibold text-sh-text-white">
 					{formTitle}
@@ -155,7 +155,7 @@ export default function ComposePanel() {
 				</div>
 
 				{/* Footer actions */}
-				<div className="mt-auto px-4 py-3 border-t border-sh-border shrink-0 md:px-6 bg-sh-bg-dark">
+				<div className="mt-auto px-4 py-3 border-t border-sh-border shrink-0 md:px-6 bg-transparent">
 					<div className="flex items-center justify-between">
 						<button 
 							type="button" 
