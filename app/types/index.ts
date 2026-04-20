@@ -64,3 +64,17 @@ export interface Folder {
 	name: string;
 	unreadCount: number;
 }
+
+export interface ContactData {
+	id: string; // The normalized email address
+	firstName?: string;
+	lastName?: string;
+	displayName?: string;
+	deviceNumber?: string;
+	company?: string;
+	title?: string;
+	department?: string;
+	officeLocation?: string;
+	avatarUrl?: string;
+	updated_at?: string;
+}

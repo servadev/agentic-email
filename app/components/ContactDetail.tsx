@@ -21,9 +21,10 @@ import {
 	BriefcaseIcon,
 	UserIcon
 } from "@phosphor-icons/react";
-import React, { useState } from "react";
-import type { Email } from "~/types";
-import { useUIStore } from "~/hooks/useUIStore";
+import React, { useState, useMemo } from "react";
+import type { Email, ContactData } from "~/types";
+import { useParams } from "react-router";
+import { useContacts, useUpdateContact } from "~/queries/contacts";
 
 interface Contact {
 	emailAddress: string;
@@ -39,12 +40,17 @@ interface ContactDetailProps {
 }
 
 function ContactEditModal({ contact, onClose }: { contact: Contact; onClose: () => void }) {
-	const { editedContacts, updateContact } = useUIStore();
-	const editedData = editedContacts[contact.emailAddress] || {};
+	const { mailboxId } = useParams<{ mailboxId: string }>();
+	const { data: contactsData = [] } = useContacts(mailboxId);
+	const updateContactMutation = useUpdateContact();
+	
+	const editedData = useMemo(() => {
+		return contactsData?.find(c => c.id === contact.emailAddress.toLowerCase()) || {} as ContactData;
+	}, [contactsData, contact.emailAddress]);
 
 	const [firstName, setFirstName] = useState(editedData.firstName ?? (contact.displayName.split(" ")[0] || ""));
 	const [lastName, setLastName] = useState(editedData.lastName ?? (contact.displayName.split(" ").slice(1).join(" ") || ""));
-	const [email, setEmail] = useState(editedData.email || contact.emailAddress);
+	const [email, setEmail] = useState(editedData.id || contact.emailAddress);
 	const [deviceNumber, setDeviceNumber] = useState(editedData.deviceNumber || "");
 	const [company, setCompany] = useState(editedData.company || "");
 	const [title, setTitle] = useState(editedData.title || "");
@@ -52,18 +58,28 @@ function ContactEditModal({ contact, onClose }: { contact: Contact; onClose: () 
 	const [officeLocation, setOfficeLocation] = useState(editedData.officeLocation || "");
 
 	const handleSave = () => {
-		updateContact(contact.emailAddress, {
-			firstName,
-			lastName,
-			email,
-			deviceNumber,
-			company,
-			title,
-			department,
-			officeLocation,
-			displayName: `${firstName} ${lastName}`.trim()
+		updateContactMutation.mutate({
+			mailboxId: mailboxId!,
+			id: contact.emailAddress.toLowerCase(),
+			data: {
+				firstName,
+				lastName,
+				deviceNumber,
+				company,
+				title,
+				department,
+				officeLocation,
+				displayName: `${firstName} ${lastName}`.trim()
+			}
+		}, {
+			onSuccess: () => {
+				onClose();
+			},
+			onError: (error) => {
+				console.error("Failed to save contact details:", error);
+				alert("Failed to save contact. Please try again.");
+			}
 		});
-		onClose();
 	};
 
 	return (
@@ -212,14 +228,18 @@ function ContactField({
 }
 
 export default function ContactDetail({ contact, onBack }: ContactDetailProps) {
-	const { editedContacts } = useUIStore();
+	const { mailboxId } = useParams<{ mailboxId: string }>();
+	const { data: contactsData = [] } = useContacts(mailboxId);
 	const [isEditing, setIsEditing] = useState(false);
 
 	if (!contact) return null;
 
-	const editedData = editedContacts[contact.emailAddress] || {};
+	const editedData = useMemo(() => {
+		return contactsData.find(c => c.id === contact.emailAddress.toLowerCase()) || {} as ContactData;
+	}, [contactsData, contact.emailAddress]);
+
 	const displayName = editedData.displayName || contact.displayName;
-	const emailAddress = editedData.email || contact.emailAddress;
+	const emailAddress = editedData.id || contact.emailAddress;
 	const deviceNumber = editedData.deviceNumber ?? "+1 (234) 456-7891";
 	const company = editedData.company ?? "Contoso";
 	const title = editedData.title ?? "Senior Researcher";

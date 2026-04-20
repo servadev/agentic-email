@@ -42,3 +42,17 @@ export const attachments = sqliteTable("attachments", {
 	content_id: text("content_id"),
 	disposition: text("disposition"),
 });
+
+export const contacts = sqliteTable("contacts", {
+	id: text("id").primaryKey(), // normalized email address
+	firstName: text("first_name"),
+	lastName: text("last_name"),
+	displayName: text("display_name"),
+	deviceNumber: text("device_number"),
+	company: text("company"),
+	title: text("title"),
+	department: text("department"),
+	officeLocation: text("office_location"),
+	avatarUrl: text("avatar_url"),
+	updated_at: text("updated_at"),
+});

@@ -9,6 +9,7 @@ import type { SQL } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { Folders } from "../../shared/folders";
 import type { Env } from "../types";
+import type { ContactData } from "../../app/types";
 import { applyMigrations, mailboxMigrations } from "./migrations";
 
 /**
@@ -584,6 +585,46 @@ export class MailboxDO extends DurableObject<Env> {
 			.groupBy(schema.folders.id, schema.folders.name)
 			.all();
 		return result;
+	}
+
+	// ── Contacts (Drizzle) ─────────────────────────────────────────
+
+	async getContacts() {
+		return this.db.select().from(schema.contacts).all();
+	}
+
+	async updateContact(id: string, data: Partial<ContactData>) {
+		try {
+			const now = new Date().toISOString();
+			
+			this.db.transaction((tx) => {
+				const existing = tx
+					.select({ id: schema.contacts.id })
+					.from(schema.contacts)
+					.where(eq(schema.contacts.id, id))
+					.get();
+
+				if (existing) {
+					tx.update(schema.contacts)
+						.set({ ...data, updated_at: now })
+						.where(eq(schema.contacts.id, id))
+						.run();
+				} else {
+					tx.insert(schema.contacts)
+						.values({ id, ...data, updated_at: now })
+						.run();
+				}
+			});
+			
+			return this.db
+				.select()
+				.from(schema.contacts)
+				.where(eq(schema.contacts.id, id))
+				.get();
+		} catch (error) {
+			console.error('Failed to update contact:', error);
+			throw new Error('Failed to update contact');
+		}
 	}
 
 	async createFolder(id: string, name: string, is_deletable: number = 1) {

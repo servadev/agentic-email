@@ -168,4 +168,22 @@ export const mailboxMigrations: Migration[] = [
             CREATE INDEX IF NOT EXISTS idx_emails_folder_date ON emails(folder_id, date DESC);
         `,
 	},
+	{
+		name: "9_add_contacts_table",
+		sql: txn(`
+            CREATE TABLE IF NOT EXISTS contacts (
+                id TEXT PRIMARY KEY,
+                first_name TEXT,
+                last_name TEXT,
+                display_name TEXT,
+                device_number TEXT,
+                company TEXT,
+                title TEXT,
+                department TEXT,
+                office_location TEXT,
+                avatar_url TEXT,
+                updated_at TEXT
+            );
+        `),
+	},
 ];

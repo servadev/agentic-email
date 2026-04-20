@@ -7,18 +7,28 @@ import { useParams } from "react-router";
 import MailboxSplitView from "~/components/MailboxSplitView";
 import ContactDetail from "~/components/ContactDetail";
 import { useEmails } from "~/queries/emails";
+import { useContacts } from "~/queries/contacts";
 import { useUIStore } from "~/hooks/useUIStore";
 import { parseSenderInfo } from "~/lib/utils";
-import type { Email } from "~/types";
+import type { Email, ContactData } from "~/types";
 
 export default function ContactsRoute() {
 	const { mailboxId } = useParams<{ mailboxId: string }>();
-	const { selectedContact, setSelectedContact, editedContacts } = useUIStore();
+	const { selectedContact, setSelectedContact } = useUIStore();
 
 	// We fetch a chunk of emails to build our contacts list from cache
 	const params = useMemo(() => ({ limit: "200" }), []);
 	const { data: emailData, isFetching } = useEmails(mailboxId, params);
 	const emails = emailData?.emails ?? [];
+
+	const { data: contactsData = [] } = useContacts(mailboxId);
+	const editedContacts = useMemo(() => {
+		const map: Record<string, ContactData> = {};
+		for (const c of contactsData) {
+			map[c.id] = c;
+		}
+		return map;
+	}, [contactsData]);
 
 	// Group emails into contacts and sort alphabetically
 	const contacts = useMemo(() => {

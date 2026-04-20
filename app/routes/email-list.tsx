@@ -32,10 +32,11 @@ import {
 	useMarkThreadRead,
 	useUpdateEmail,
 } from "~/queries/emails";
+import { useContacts } from "~/queries/contacts";
 import { useFolders } from "~/queries/folders";
 import { queryKeys } from "~/queries/keys";
 import { useUIStore } from "~/hooks/useUIStore";
-import type { Email } from "~/types";
+import type { Email, ContactData } from "~/types";
 
 const PAGE_SIZE = 25;
 
@@ -193,7 +194,6 @@ export default function EmailListRoute() {
 		setSelectedThreadId,
 		closePanel,
 		startCompose,
-		editedContacts,
 	} = useUIStore();
 	const [page, setPage] = useState(1);
 
@@ -322,6 +322,15 @@ export default function EmailListRoute() {
 			}
 		}
 	};
+
+	const { data: contactsData = [] } = useContacts(mailboxId);
+	const editedContacts = useMemo(() => {
+		const map: Record<string, ContactData> = {};
+		for (const c of contactsData) {
+			map[c.id] = c;
+		}
+		return map;
+	}, [contactsData]);
 
 	// Group emails into contacts
 	const contacts = useMemo(() => {

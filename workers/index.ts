@@ -353,6 +353,20 @@ app.delete("/api/v1/mailboxes/:mailboxId/folders/:id", async (c: AppContext) => 
 	return ok ? c.body(null, 204) : c.json({ error: "Folder not found or cannot be deleted" }, 400);
 });
 
+// -- Contacts -------------------------------------------------------
+
+app.get("/api/v1/mailboxes/:mailboxId/contacts", async (c: AppContext) => {
+	const contacts = await c.var.mailboxStub.getContacts();
+	return c.json(contacts);
+});
+
+app.put("/api/v1/mailboxes/:mailboxId/contacts/:id", async (c: AppContext) => {
+	const data = await c.req.json();
+	const id = c.req.param("id")!;
+	const contact = await c.var.mailboxStub.updateContact(id, data);
+	return c.json(contact);
+});
+
 // -- Search ---------------------------------------------------------
 
 app.get("/api/v1/mailboxes/:mailboxId/search", async (c: AppContext) => {
