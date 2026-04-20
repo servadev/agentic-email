@@ -5,7 +5,9 @@
 import { FloppyDiskIcon, PaperPlaneTiltIcon, XIcon, WarningCircleIcon, RobotIcon, MagicWandIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { useUIStore } from "~/hooks/useUIStore";
-import { formatComposeDate, htmlToPlainText } from "~/lib/utils";
+import { htmlToPlainText } from "~/lib/utils";
+import { formatQuotedDate } from "shared/dates";
+import { Tooltip } from "@cloudflare/kumo";
 import { useComposeForm } from "~/hooks/useComposeForm";
 import RichTextEditor from "./RichTextEditor";
 import { useState, useEffect, useRef } from "react";
@@ -166,6 +168,8 @@ export default function ComposePanel() {
 		}
 	};
 
+	const hasContent = to.trim() !== "" || subject.trim() !== "" || htmlToPlainText(body || "").trim() !== "";
+
 	const inputClass = "w-full bg-sh-search-bg border border-sh-border-thin rounded-[2px] px-2.5 py-1.5 text-sh-base text-sh-text-white placeholder-sh-search-placeholder outline-none focus:border-sh-text-muted focus:ring-2 focus:ring-sh-accent transition-colors";
 
 	return (
@@ -174,15 +178,7 @@ export default function ComposePanel() {
 				<h2 className="text-[13px] font-semibold text-sh-text-white">
 					{formTitle}
 				</h2>
-				<div className="flex items-center gap-2">
-					<button
-						type="button"
-						onClick={openAIWizard}
-						className="flex items-center gap-1.5 px-2 py-1 text-[12px] font-medium text-sh-text-white bg-sh-accent hover:bg-opacity-90 transition-colors rounded-[2px] focus:outline-none focus:ring-2 focus:ring-sh-accent"
-					>
-						<MagicWandIcon size={14} />
-						AI Assist
-					</button>
+				<div className="flex items-center gap-1">
 					<button
 						type="button"
 						onClick={closeCompose}
@@ -199,7 +195,7 @@ export default function ComposePanel() {
 				<div className="px-4 md:px-6 py-3 border-b border-sh-border shrink-0 bg-sh-bg-panel text-[12px] overflow-y-auto max-h-[150px]">
 					<div className="font-medium text-sh-text-muted mb-1 flex items-center justify-between">
 						<span>Replying to {originalEmail?.sender || "Unknown Sender"}</span>
-						<span className="text-[11px]">{originalEmail?.date ? formatComposeDate(originalEmail.date) : ""}</span>
+						<span className="text-[11px]">{originalEmail?.date ? formatQuotedDate(originalEmail.date) : ""}</span>
 					</div>
 					<div className="text-sh-text-read line-clamp-3 overflow-hidden text-ellipsis italic opacity-80 border-l-2 border-sh-border-thin pl-3">
 						"{originalEmail?.snippet || htmlToPlainText(originalEmail?.body || "") || "No preview available"}"
@@ -309,7 +305,6 @@ export default function ComposePanel() {
 					</div>
 				</div>
 
-				{/* Footer actions */}
 				<div className="mt-auto px-4 py-3 border-t border-sh-border shrink-0 md:px-6 bg-transparent">
 					<div className="flex items-center justify-between">
 						<button 
@@ -323,13 +318,28 @@ export default function ComposePanel() {
 						<div className="flex items-center gap-2">
 							<button
 								type="button"
-								disabled={isSending}
-								onClick={handleSaveDraft}
-								className="flex items-center gap-1.5 px-3 py-1.5 bg-sh-bg-hover hover:bg-opacity-80 text-sh-text-white rounded-[2px] text-[12px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-sh-accent disabled:opacity-50 disabled:cursor-not-allowed"
+								onClick={openAIWizard}
+								className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-sh-text-muted hover:text-sh-text-white bg-transparent border border-sh-border hover:bg-sh-bg-hover transition-colors rounded-[2px] focus:outline-none focus:ring-2 focus:ring-sh-accent"
+								aria-label="AI Assist"
 							>
-								<FloppyDiskIcon size={14} className={isSavingDraft ? "animate-pulse" : ""} />
-								{isSavingDraft ? "Saving..." : "Save Draft"}
+								<MagicWandIcon size={14} />
+								AI Assist
 							</button>
+
+							{hasContent && (
+								<Tooltip content="Save Draft" side="top" asChild>
+									<button
+										type="button"
+										disabled={isSavingDraft}
+										onClick={handleSaveDraft}
+										className="p-1.5 text-sh-text-muted hover:text-sh-text-white rounded-[2px] transition-colors focus:outline-none focus:ring-2 focus:ring-sh-accent disabled:opacity-50 disabled:cursor-not-allowed"
+										aria-label="Save draft"
+									>
+										<FloppyDiskIcon size={18} className={isSavingDraft ? "animate-pulse" : ""} />
+									</button>
+								</Tooltip>
+							)}
+
 							<button
 								type="submit"
 								disabled={isSavingDraft || isSending}

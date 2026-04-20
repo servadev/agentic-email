@@ -7,13 +7,13 @@ import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
 	buildQuotedReplyBlock,
 	escapeHtml,
-	formatComposeDate,
 	getSignatureBlock,
 	htmlToPlainText,
 	splitEmailList,
 	stripHtml,
 	toEmailListValue,
 } from "~/lib/utils";
+import { formatQuotedDate } from "shared/dates";
 import { useDeleteEmail, useForwardEmail, useReplyToEmail, useSaveDraft, useSendEmail } from "~/queries/emails";
 import { useMailbox } from "~/queries/mailboxes";
 import { useUIStore } from "~/hooks/useUIStore";
@@ -68,7 +68,7 @@ function buildForwardBody(
 	// We want to safely escape HTML first to prevent XSS, then add our `<br>` tags for formatting
 	const safeBody = escapeHtml(stripHtml(original.body || "")).replace(/\n/g, "<br>");
 
-	return `<p><br></p>${sigBlock ? `${sigBlock}<br>` : ""}<div style="border: 1px solid #ddd; padding: 1em; background-color: #f9f9f9; margin: 1em 0;"><strong>Forwarded message:</strong><br><strong>From:</strong> ${safeSender}<br><strong>Date:</strong> ${formatComposeDate(original.date)}<br><strong>Subject:</strong> ${safeSubject}<br><br>${safeBody}</div>`;
+	return `<p><br></p>${sigBlock ? `${sigBlock}<br>` : ""}<div style="border: 1px solid #ddd; padding: 1em; background-color: #f9f9f9; margin: 1em 0;"><strong>Forwarded message:</strong><br><strong>From:</strong> ${safeSender}<br><strong>Date:</strong> ${formatQuotedDate(original.date)}<br><strong>Subject:</strong> ${safeSubject}<br><br>${safeBody}</div>`;
 }
 
 function buildReplyAllFields(
