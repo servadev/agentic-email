@@ -11,6 +11,7 @@ import { Folders, SYSTEM_FOLDER_IDS } from "shared/folders";
 import { useFolders } from "~/queries/folders";
 import SearchModal from "~/components/SearchModal";
 import AppDrawer from "~/components/AppDrawer";
+import ComposePanel from "~/components/ComposePanel";
 
 const SYSTEM_FOLDER_LINKS = [
 	{ id: Folders.INBOX, label: "Inbox" },
@@ -26,7 +27,7 @@ export default function Header() {
 	const { mailboxId } = useParams<{ mailboxId: string }>();
 	const navigate = useNavigate();
 	const location = useLocation();
-	const { toggleAgentPanel, isAgentPanelOpen, startCompose } = useUIStore();
+	const { toggleAgentPanel, isAgentPanelOpen, startCompose, isComposing } = useUIStore();
 	const { data: folders = [] } = useFolders(mailboxId);
 
 	const isSettingsActive = location.pathname.includes("/settings");

@@ -111,16 +111,16 @@ export const mailboxMigrations: Migration[] = [
                 FOREIGN KEY(folder_id) REFERENCES folders(id) ON DELETE CASCADE
             );
 
-            CREATE TABLE attachments (
+            CREATE TABLE IF NOT EXISTS attachments (
                 id TEXT PRIMARY KEY,
-                email_id TEXT NOT NULL,
+                email_id TEXT NOT NULL REFERENCES emails(id) ON DELETE CASCADE,
                 filename TEXT NOT NULL,
                 mimetype TEXT NOT NULL,
                 size INTEGER NOT NULL,
                 content_id TEXT,
-                disposition TEXT,
-                FOREIGN KEY(email_id) REFERENCES emails(id) ON DELETE CASCADE
+                disposition TEXT
             );
+            CREATE INDEX IF NOT EXISTS idx_attachments_email_id ON attachments(email_id);
         `),
 	},
 	{

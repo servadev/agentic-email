@@ -2,7 +2,7 @@
 // Licensed under the Apache 2.0 license found in the LICENSE file or at:
 //     https://opensource.org/licenses/Apache-2.0
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import MailboxSplitView from "~/components/MailboxSplitView";
 import ContactDetail from "~/components/ContactDetail";
@@ -12,9 +12,11 @@ import { useUIStore } from "~/hooks/useUIStore";
 import { parseSenderInfo } from "~/lib/utils";
 import type { Email, ContactData } from "~/types";
 
+import ComposePanel from "~/components/ComposePanel";
+
 export default function ContactsRoute() {
 	const { mailboxId } = useParams<{ mailboxId: string }>();
-	const { selectedContact, setSelectedContact } = useUIStore();
+	const { selectedContact, setSelectedContact, isComposing } = useUIStore();
 
 	// We fetch a chunk of emails to build our contacts list from cache
 	const params = useMemo(() => ({ limit: "200" }), []);
@@ -32,10 +34,34 @@ export default function ContactsRoute() {
 
 	// Group emails into contacts and sort alphabetically
 	const contacts = useMemo(() => {
-		const map = new Map<string, { emailAddress: string; displayName: string; latestEmail: Email; threadCount: number; unreadCount: number }>();
+		const map = new Map<string, { emailAddress: string; displayName: string; latestEmail: Email | null; threadCount: number; unreadCount: number }>();
 		
+		// First, add all manually edited contacts from the DB
+		for (const c of contactsData) {
+			const normalized = c.id.toLowerCase();
+			if (normalized === mailboxId?.toLowerCase()) continue;
+			
+			map.set(normalized, {
+				emailAddress: normalized,
+				displayName: c.displayName || normalized,
+				latestEmail: null,
+				threadCount: 0,
+				unreadCount: 0
+			});
+		}
+
 		emails.forEach(email => {
-			const { displayName, emailAddress } = parseSenderInfo(email.sender);
+			let contactStr = email.sender || "";
+			if (email.folder_id === "sent" || email.sender?.toLowerCase() === mailboxId?.toLowerCase()) {
+				const recipients = email.recipient ? email.recipient.split(",") : [];
+				if (recipients.length > 0) {
+					contactStr = recipients[0].trim();
+				} else {
+					contactStr = email.sender || "";
+				}
+			}
+			
+			const { displayName, emailAddress } = parseSenderInfo(contactStr);
 			
 			const normalizedEmailAddress = emailAddress.toLowerCase();
 			if (normalizedEmailAddress === mailboxId?.toLowerCase()) return; // Skip the 'You' contact
@@ -54,14 +80,14 @@ export default function ContactsRoute() {
 			} else {
 				existing.threadCount += 1;
 				if (isUnread) existing.unreadCount += 1;
-				if (new Date(email.date).getTime() > new Date(existing.latestEmail.date).getTime()) {
+				if (!existing.latestEmail || new Date(email.date).getTime() > new Date(existing.latestEmail.date).getTime()) {
 					existing.latestEmail = email;
 				}
 			}
 		});
 
 		return Array.from(map.values()).sort((a, b) => a.displayName.localeCompare(b.displayName));
-	}, [emails, editedContacts, mailboxId]);
+	}, [emails, editedContacts, mailboxId, contactsData]);
 
 	const youContact = useMemo(() => {
 		if (!mailboxId) return null;
@@ -78,6 +104,15 @@ export default function ContactsRoute() {
 			unreadCount: 0
 		};
 	}, [mailboxId, editedContacts]);
+
+	const [hasAutoSelected, setHasAutoSelected] = useState(false);
+
+	useEffect(() => {
+		if (!selectedContact && youContact && !hasAutoSelected && !isComposing) {
+			setSelectedContact(youContact.emailAddress);
+			setHasAutoSelected(true);
+		}
+	}, [selectedContact, youContact, hasAutoSelected, isComposing, setSelectedContact]);
 
 	const leftPane = (
 		<div className="flex flex-col h-full bg-sh-bg-dark">
@@ -150,7 +185,9 @@ export default function ContactsRoute() {
 	);
 
 	let centerPane: React.ReactNode;
-	if (selectedContact) {
+	if (isComposing) {
+		centerPane = <ComposePanel />;
+	} else if (selectedContact) {
 		const contactObj = selectedContact === youContact?.emailAddress ? youContact : contacts.find(c => c.emailAddress === selectedContact);
 		centerPane = (
 			<div className="flex flex-col h-full bg-transparent w-full">

@@ -537,12 +537,22 @@ export class MailboxDO extends DurableObject<Env> {
 
 	async deleteEmail(id: string) {
 		const email = this.db
-			.select({ id: schema.emails.id })
+			.select({ id: schema.emails.id, folder_id: schema.emails.folder_id })
 			.from(schema.emails)
 			.where(eq(schema.emails.id, id))
 			.get();
 
 		if (!email) return null;
+
+		// Only delete attachments if it's a draft
+		// For sent/received emails, deleting the email shouldn't cascade-delete 
+		// contacts or conversations as a side-effect, though standard foreign key
+		// relations in SQLite might be in play.
+		if (email.folder_id === Folders.DRAFT) {
+			this.db.delete(schema.attachments).where(eq(schema.attachments.email_id, id)).run();
+			this.db.delete(schema.emails).where(eq(schema.emails.id, id)).run();
+			return [];
+		}
 
 		const emailAttachments = this.db
 			.select({

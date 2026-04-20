@@ -5,7 +5,8 @@
 import EmailAttachmentList from "~/components/EmailAttachmentList";
 import EmailIframe from "~/components/EmailIframe";
 import { formatDetailDate, rewriteInlineImages } from "~/lib/utils";
-import type { Email } from "~/types";
+import type { Email, ContactData } from "~/types";
+import { useContacts } from "~/queries/contacts";
 
 interface SingleMessageViewProps {
 	email: Email;
@@ -18,17 +19,24 @@ export default function SingleMessageView({
 	mailboxId,
 	onPreviewImage,
 }: SingleMessageViewProps) {
+	const { data: contactsData = [] } = useContacts(mailboxId);
+	const contact = contactsData.find(c => c.id === email.sender?.toLowerCase());
+
 	return (
 		<div className="flex flex-col h-full bg-transparent text-sh-text-white">
 			<div className="px-4 py-4 border-b border-sh-border md:px-6">
 				<div className="flex items-center justify-between gap-3">
 					<div className="flex items-center gap-2.5 min-w-0">
-						<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[2px] bg-sh-bg-hover text-[13px] font-bold text-sh-text-white">
-							{email.sender.charAt(0).toUpperCase()}
-						</div>
+						{contact?.avatarUrl ? (
+							<img src={contact.avatarUrl} alt={contact.displayName || email.sender || 'Contact avatar'} className="h-9 w-9 shrink-0 rounded-[2px] object-cover" />
+						) : (
+							<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[2px] bg-sh-bg-hover text-[13px] font-bold text-sh-text-white">
+								{email.sender?.charAt(0).toUpperCase() || '?'}
+							</div>
+						)}
 						<div className="min-w-0">
 							<div className="text-[13px] font-medium text-sh-text-white truncate">
-								{email.sender}
+								{contact?.displayName || email.sender}
 							</div>
 							<div className="text-[12px] text-sh-text-muted">To: {email.recipient}</div>
 						</div>

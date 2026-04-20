@@ -20,7 +20,9 @@ import {
 	rewriteInlineImages,
 	stripHtml,
 } from "~/lib/utils";
-import type { Email } from "~/types";
+import type { Email, ContactData } from "~/types";
+import { useParams } from "react-router";
+import { useContacts } from "~/queries/contacts";
 
 interface ThreadMessageProps {
 	email: Email;
@@ -39,7 +41,13 @@ interface ThreadMessageProps {
 	onPreviewImage?: (url: string, filename: string) => void;
 }
 
-function Avatar({ isDraft, isSelf, sender }: { isDraft?: boolean; isSelf: boolean; sender: string }) {
+function Avatar({ isDraft, isSelf, sender, contact }: { isDraft?: boolean; isSelf: boolean; sender: string; contact?: ContactData }) {
+	if (contact?.avatarUrl && !isDraft) {
+		return (
+			<img src={contact.avatarUrl} alt={contact.displayName || sender || 'Contact avatar'} className="h-8 w-8 shrink-0 rounded-[2px] object-cover" />
+		);
+	}
+	
 	return (
 		<div
 			className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[2px] text-[12px] font-bold ${
@@ -71,9 +79,12 @@ export default function ThreadMessage({
 	onViewSource,
 	onPreviewImage,
 }: ThreadMessageProps) {
+	const { data: contactsData = [] } = useContacts(mailboxId);
+	
 	const isSelf = email.sender === mailboxEmail;
+	const contact = contactsData.find(c => c.id === (isSelf ? mailboxEmail : email.sender)?.toLowerCase());
 	const containerClassName = `${!isLast ? "border-b border-sh-border" : ""} ${isDraft ? "border-l-2 border-l-sh-accent bg-sh-accent/5" : ""}`;
-	const senderLabel = isDraft ? "Draft reply" : isSelf ? "You" : email.sender;
+	const senderLabel = isDraft ? "Draft reply" : isSelf ? "You" : (contact?.displayName || email.sender);
 
 	if (!isExpanded) {
 		return (
@@ -83,7 +94,7 @@ export default function ThreadMessage({
 					onClick={onToggleExpand}
 					className="w-full flex items-center gap-3 px-4 py-3 hover:bg-sh-bg-hover rounded-[2px] text-left focus:outline-none focus:ring-2 focus:ring-sh-accent transition-colors"
 				>
-					<Avatar isDraft={isDraft} isSelf={isSelf} sender={email.sender} />
+					<Avatar isDraft={isDraft} isSelf={isSelf} sender={email.sender} contact={contact} />
 					<div className="flex-1 min-w-0">
 						<div className="flex items-center justify-between">
 							<span className="text-[13px] font-medium text-sh-text-white truncate">
@@ -117,7 +128,7 @@ export default function ThreadMessage({
 							aria-label="Collapse message"
 						>
 							<div className="cursor-pointer hover:opacity-80 transition-opacity">
-								<Avatar isDraft={isDraft} isSelf={isSelf} sender={email.sender} />
+								<Avatar isDraft={isDraft} isSelf={isSelf} sender={email.sender} contact={contact} />
 							</div>
 						</button>
 						<div className="min-w-0">
