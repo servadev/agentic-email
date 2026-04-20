@@ -7,10 +7,8 @@ import { useParams } from "react-router";
 import { useUIStore } from "~/hooks/useUIStore";
 import { formatComposeDate, htmlToPlainText } from "~/lib/utils";
 import { useComposeForm } from "~/hooks/useComposeForm";
-
 import RichTextEditor from "./RichTextEditor";
-import { useState } from "react";
-import { Dialog, Button } from "@cloudflare/kumo";
+import { useState, useEffect, useRef } from "react";
 import api from "~/services/api";
 import DOMPurify from "dompurify";
 
@@ -43,7 +41,6 @@ export default function ComposePanel() {
 		handleSaveDraft,
 		handleSend,
 		closeCompose,
-		closePanel,
 	} = useComposeForm(mailboxId, folder);
 
 	const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
@@ -52,6 +49,46 @@ export default function ComposePanel() {
 	const [aiDraftPreview, setAIDraftPreview] = useState("");
 
 	const [aiDraftError, setAIDraftError] = useState("");
+	const aiPromptInputRef = useRef<HTMLTextAreaElement>(null);
+	const modalRef = useRef<HTMLDivElement>(null);
+
+	// Auto-focus input when modal opens and trap focus
+	useEffect(() => {
+		if (isAIDialogOpen) {
+			setTimeout(() => {
+				aiPromptInputRef.current?.focus();
+			}, 50);
+		}
+	}, [isAIDialogOpen]);
+
+	// Trap focus inside modal
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (!isAIDialogOpen || e.key !== "Tab" || !modalRef.current) return;
+
+			const focusableElements = modalRef.current.querySelectorAll(
+				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+			);
+			
+			const firstElement = focusableElements[0] as HTMLElement;
+			const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+			if (e.shiftKey) {
+				if (document.activeElement === firstElement) {
+					lastElement.focus();
+					e.preventDefault();
+				}
+			} else {
+				if (document.activeElement === lastElement) {
+					firstElement.focus();
+					e.preventDefault();
+				}
+			}
+		};
+
+		document.addEventListener("keydown", handleKeyDown);
+		return () => document.removeEventListener("keydown", handleKeyDown);
+	}, [isAIDialogOpen]);
 
 	const handleAIGenerate = async () => {
 		if (!mailboxId || !aiPrompt.trim()) return;
@@ -270,65 +307,98 @@ export default function ComposePanel() {
 				</div>
 			</form>
 
-			<Dialog.Root open={isAIDialogOpen} onOpenChange={(open) => { if (!open) setIsAIDialogOpen(false); }}>
-				<Dialog size="lg">
-					<Dialog.Title>
-						<div className="flex items-center gap-2">
-							<MagicWandIcon size={20} className="text-sh-accent" />
-							<span>Draft with AI</span>
-						</div>
-					</Dialog.Title>
-					<div className="mt-4 space-y-4">
-						<p className="text-[13px] text-sh-text-muted">
-							Describe what you want to say in the email. The AI will generate a draft that you can review and edit before sending.
-						</p>
-						{aiDraftError && (
-							<div className="flex items-center gap-2 px-3 py-2 rounded-[2px] bg-red-500/10 border border-red-500/20 text-red-400 text-[12px]">
-								<WarningCircleIcon size={16} />
-								<span>{aiDraftError}</span>
+			{isAIDialogOpen && (
+				<div
+					className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] bg-black/50 backdrop-blur-sm"
+					role="presentation"
+					onClick={(e) => {
+						if (e.target === e.currentTarget) setIsAIDialogOpen(false);
+					}}
+				>
+					<div
+						ref={modalRef}
+						className="w-full max-w-2xl bg-sh-bg-panel border border-sh-border rounded-lg shadow-2xl flex flex-col overflow-hidden"
+						role="dialog"
+						aria-modal="true"
+						aria-labelledby="ai-draft-title"
+						aria-describedby="ai-draft-description"
+						tabIndex={-1}
+						onKeyDown={(e) => {
+							if (e.key === "Escape") {
+								setIsAIDialogOpen(false);
+							}
+						}}
+					>
+						<div className="flex items-center justify-between px-4 py-3 border-b border-sh-border bg-sh-bg-panel">
+							<div className="flex items-center gap-2">
+								<MagicWandIcon size={20} className="text-sh-accent" />
+								<h2 id="ai-draft-title" className="text-[15px] font-semibold text-sh-text-white">Draft with AI</h2>
 							</div>
-						)}
-						<textarea
-							value={aiPrompt}
-							onChange={(e) => setAIPrompt(e.target.value)}
-							placeholder="e.g., Thank them for the meeting and ask for the Q3 report by Friday."
-							className="w-full resize-y rounded-[2px] border border-sh-border-thin bg-sh-search-bg px-3 py-2 text-[13px] text-sh-text-white placeholder:text-sh-search-placeholder focus:outline-none focus:border-sh-text-muted transition-colors min-h-[80px]"
-						/>
-						
-						{isAIGenerating && (
-							<div className="flex items-center gap-2 text-sh-accent text-[13px]">
-								<RobotIcon size={16} className="animate-pulse" />
-								<span>Generating draft...</span>
-							</div>
-						)}
-
-						{aiDraftPreview && (
-							<div className="space-y-2">
-								<h3 className="text-[12px] font-medium text-sh-text-muted uppercase tracking-wider">Preview</h3>
-								<div className="rounded-[2px] border border-sh-border-thin bg-sh-bg-dark p-3 text-[13px] text-sh-text-white whitespace-pre-wrap max-h-[300px] overflow-y-auto">
-									{aiDraftPreview}
-								</div>
-							</div>
-						)}
-
-						<div className="flex justify-end gap-2 pt-2">
-							<Dialog.Close>
-								<Button variant="secondary" size="sm">
-									Cancel
-								</Button>
-							</Dialog.Close>
-							<Button 
-								variant="primary" 
-								size="sm" 
-								onClick={aiDraftPreview ? handleAISubmit : handleAIGenerate}
-								disabled={isAIGenerating || !aiPrompt.trim()}
+							<button
+								type="button"
+								onClick={() => setIsAIDialogOpen(false)}
+								className="p-1 text-sh-text-muted hover:text-sh-text-white rounded-[2px] transition-colors focus:outline-none focus:ring-2 focus:ring-sh-accent"
+								aria-label="Close dialog"
 							>
-								{aiDraftPreview ? "Insert into Compose" : "Generate Draft"}
-							</Button>
+								<XIcon size={16} />
+							</button>
+						</div>
+
+						<div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto no-scrollbar">
+							<p id="ai-draft-description" className="text-[13px] text-sh-text-muted">
+								Describe what you want to say in the email. The AI will generate a draft that you can review and edit before sending.
+							</p>
+							{aiDraftError && (
+								<div className="flex items-center gap-2 px-3 py-2 rounded-[2px] bg-red-500/10 border border-red-500/20 text-red-400 text-[12px]">
+									<WarningCircleIcon size={16} />
+									<span>{aiDraftError}</span>
+								</div>
+							)}
+							<textarea
+								ref={aiPromptInputRef}
+								value={aiPrompt}
+								onChange={(e) => setAIPrompt(e.target.value)}
+								placeholder="e.g., Thank them for the meeting and ask for the Q3 report by Friday."
+								className="w-full resize-y rounded-[2px] border border-sh-border-thin bg-sh-search-bg px-3 py-2 text-[13px] text-sh-text-white placeholder:text-sh-search-placeholder focus:outline-none focus:border-sh-text-muted transition-colors min-h-[80px]"
+							/>
+							
+							{isAIGenerating && (
+								<div className="flex items-center gap-2 text-sh-accent text-[13px]">
+									<RobotIcon size={16} className="animate-pulse" />
+									<span>Generating draft...</span>
+								</div>
+							)}
+
+							{aiDraftPreview && (
+								<div className="space-y-2">
+									<h3 className="text-[12px] font-medium text-sh-text-muted uppercase tracking-wider">Preview</h3>
+									<div className="rounded-[2px] border border-sh-border-thin bg-sh-bg-dark p-3 text-[13px] text-sh-text-white whitespace-pre-wrap max-h-[300px] overflow-y-auto">
+										{aiDraftPreview}
+									</div>
+								</div>
+							)}
+
+							<div className="flex justify-end gap-3 pt-4 border-t border-sh-border mt-6">
+								<button
+									type="button"
+									onClick={() => setIsAIDialogOpen(false)}
+									className="px-4 py-1.5 text-[13px] font-medium text-sh-text-muted hover:text-sh-text-white bg-transparent border border-sh-border hover:bg-sh-bg-hover transition-colors rounded-[2px] focus:outline-none focus:ring-2 focus:ring-sh-accent"
+								>
+									Cancel
+								</button>
+								<button
+									type="button"
+									onClick={aiDraftPreview ? handleAISubmit : handleAIGenerate}
+									disabled={isAIGenerating || !aiPrompt.trim()}
+									className="px-4 py-1.5 text-[13px] font-medium text-sh-text-white bg-sh-accent hover:bg-opacity-90 transition-colors rounded-[2px] focus:outline-none focus:ring-2 focus:ring-sh-accent disabled:opacity-50 disabled:cursor-not-allowed"
+								>
+									{aiDraftPreview ? "Insert into Compose" : "Generate Draft"}
+								</button>
+							</div>
 						</div>
 					</div>
-				</Dialog>
-			</Dialog.Root>
+				</div>
+			)}
 		</div>
 	);
 }
