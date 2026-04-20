@@ -7,6 +7,7 @@ import { FloppyDiskIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { useComposeForm } from "~/hooks/useComposeForm";
 import RichTextEditor from "./RichTextEditor";
+import EmailInput from "./EmailInput";
 import { useUIStore } from "~/hooks/useUIStore";
 
 export default function ComposeEmail() {
@@ -51,13 +52,14 @@ export default function ComposeEmail() {
 					{error && <Banner variant="error" text={error} />}
 					<div className="flex items-center gap-2">
 						<div className="flex-1">
-							<Input
-								label="To"
-								type="text"
+							<Text size="sm" DANGEROUS_className="font-medium mb-1.5 block">
+								To
+							</Text>
+							<EmailInput
 								placeholder="recipient@example.com, another@example.com"
-								size="sm"
 								value={to}
-								onChange={(e) => setTo(e.target.value)}
+								onChange={(val) => setTo(val)}
+								className="w-full bg-transparent border border-sh-border-thin rounded-[4px] px-2.5 py-1.5 text-[13px] text-sh-text-white focus-within:border-sh-text-muted focus-within:ring-2 focus-within:ring-sh-accent transition-colors"
 								required
 							/>
 						</div>
@@ -72,24 +74,30 @@ export default function ComposeEmail() {
 						)}
 					</div>
 					{showCcBcc && (
-						<Input
-							label="CC"
-							type="text"
-							size="sm"
-							value={cc}
-							onChange={(e) => setCc(e.target.value)}
-							placeholder="Separate multiple addresses with commas"
-						/>
+						<div>
+							<Text size="sm" DANGEROUS_className="font-medium mb-1.5 block">
+								CC
+							</Text>
+							<EmailInput
+								value={cc}
+								onChange={(val) => setCc(val)}
+								placeholder="Separate multiple addresses with commas"
+								className="w-full bg-transparent border border-sh-border-thin rounded-[4px] px-2.5 py-1.5 text-[13px] text-sh-text-white focus-within:border-sh-text-muted focus-within:ring-2 focus-within:ring-sh-accent transition-colors"
+							/>
+						</div>
 					)}
 					{showCcBcc && (
-						<Input
-							label="BCC"
-							type="text"
-							size="sm"
-							value={bcc}
-							onChange={(e) => setBcc(e.target.value)}
-							placeholder="Separate multiple addresses with commas"
-						/>
+						<div>
+							<Text size="sm" DANGEROUS_className="font-medium mb-1.5 block">
+								BCC
+							</Text>
+							<EmailInput
+								value={bcc}
+								onChange={(val) => setBcc(val)}
+								placeholder="Separate multiple addresses with commas"
+								className="w-full bg-transparent border border-sh-border-thin rounded-[4px] px-2.5 py-1.5 text-[13px] text-sh-text-white focus-within:border-sh-text-muted focus-within:ring-2 focus-within:ring-sh-accent transition-colors"
+							/>
+						</div>
 					)}
 					<Input
 						label="Subject"

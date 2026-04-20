@@ -13,6 +13,7 @@ import RichTextEditor from "./RichTextEditor";
 import { useState, useEffect, useRef } from "react";
 import api from "~/services/api";
 import DOMPurify from "dompurify";
+import EmailInput from "./EmailInput";
 
 export default function ComposePanel() {
 	const { mailboxId, folder } = useParams<{
@@ -170,7 +171,8 @@ export default function ComposePanel() {
 
 	const hasContent = to.trim() !== "" || subject.trim() !== "" || htmlToPlainText(body || "").trim() !== "";
 
-	const inputClass = "w-full bg-sh-search-bg border border-sh-border-thin rounded-[2px] px-2.5 py-1.5 text-sh-base text-sh-text-white placeholder-sh-search-placeholder outline-none focus:border-sh-text-muted focus:ring-2 focus:ring-sh-accent transition-colors";
+	const inputClass = "w-full bg-sh-search-bg border border-sh-border-thin rounded-[2px] px-2.5 py-1.5 text-[13px] text-sh-text-white placeholder-sh-search-placeholder outline-none focus:border-sh-text-muted focus:ring-2 focus:ring-sh-accent transition-colors";
+	const emailInputClass = "w-full bg-sh-search-bg border border-sh-border-thin rounded-[2px] px-2.5 py-1.5 text-[13px] text-sh-text-white placeholder-sh-search-placeholder outline-none focus-within:border-sh-text-muted focus-within:ring-2 focus-within:ring-sh-accent transition-colors";
 
 	return (
 		<div className="flex flex-col h-full bg-transparent text-sh-text-white">
@@ -226,12 +228,11 @@ export default function ComposePanel() {
 								To
 							</label>
 							<div className="flex-1 flex items-center gap-2 min-w-0">
-								<input
-									type="text"
+								<EmailInput
 									placeholder="recipient@example.com"
-									className={inputClass}
+									className={emailInputClass}
 									value={to}
-									onChange={(e) => setTo(e.target.value)}
+									onChange={(val) => setTo(val)}
 									required
 								/>
 								{!showCcBcc && (
@@ -252,11 +253,10 @@ export default function ComposePanel() {
 									CC
 								</label>
 								<div className="flex-1">
-									<input
-										type="text"
-										className={inputClass}
+									<EmailInput
+										className={emailInputClass}
 										value={cc}
-										onChange={(e) => setCc(e.target.value)}
+										onChange={(val) => setCc(val)}
 										placeholder="Separate multiple addresses with commas"
 									/>
 								</div>
@@ -269,11 +269,10 @@ export default function ComposePanel() {
 									BCC
 								</label>
 								<div className="flex-1">
-									<input
-										type="text"
-										className={inputClass}
+									<EmailInput
+										className={emailInputClass}
 										value={bcc}
-										onChange={(e) => setBcc(e.target.value)}
+										onChange={(val) => setBcc(val)}
 										placeholder="Separate multiple addresses with commas"
 									/>
 								</div>

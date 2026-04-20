@@ -67,6 +67,7 @@ export interface Folder {
 
 export interface ContactData {
 	id: string; // The normalized email address
+	emailAddress?: string;
 	firstName?: string;
 	lastName?: string;
 	displayName?: string;
