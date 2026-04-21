@@ -151,10 +151,25 @@ export default function EmailPanel({ emailId, customThreadIds }: { emailId: stri
 			const fromName = currentMailbox.settings?.fromName || currentMailbox.name;
 			const from = fromName && fromName !== currentMailbox.email ? { email: currentMailbox.email, name: fromName } : currentMailbox.email;
 			const originalEmail = target.in_reply_to ? allMessages.find((msg) => msg.id === target.in_reply_to) : undefined;
+			
+			let toValue, ccValue, bccValue;
+			try {
+				toValue = toEmailListValue(toRecipients);
+				ccValue = toEmailListValue(splitEmailList(target.cc));
+				bccValue = toEmailListValue(splitEmailList(target.bcc));
+			} catch (err) {
+				const msg = err instanceof Error ? err.message : "Invalid email address format";
+				toastManager.add({ title: msg, variant: "error" });
+				setIsSending(false);
+				return;
+			}
+
+			if (!toValue || toValue.length === 0) { toastManager.add({ title: "Cannot send: no valid recipient set on this draft.", variant: "error" }); return; }
+
 			const emailData = {
-				to: toEmailListValue(toRecipients),
-				cc: toEmailListValue(splitEmailList(target.cc)),
-				bcc: toEmailListValue(splitEmailList(target.bcc)),
+				to: toValue,
+				cc: ccValue,
+				bcc: bccValue,
 				from,
 				subject: target.subject || "(no subject)",
 				html: target.body || "",

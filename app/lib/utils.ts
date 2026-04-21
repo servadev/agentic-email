@@ -18,6 +18,8 @@ export {
 	formatShortDate,
 } from "shared/dates";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 /** @deprecated Use `formatQuotedDate` from `shared/dates` directly. */
 export const formatComposeDate = formatQuotedDate;
 
@@ -46,9 +48,13 @@ export function splitEmailList(value?: string | null): string[] {
 /**
  * Convert a list of addresses into the API payload format.
  */
-export function toEmailListValue(addresses: string[]): string | string[] | undefined {
+export function toEmailListValue(addresses: string[]): { email: string; name?: string }[] | undefined {
 	if (addresses.length === 0) return undefined;
-	return addresses.length === 1 ? addresses[0] : addresses;
+	return addresses.map((e) => {
+		const { emailAddress, displayName } = parseSenderInfo(e);
+		if (!emailAddress || !EMAIL_REGEX.test(emailAddress)) throw new Error("Invalid email address format");
+		return displayName ? { email: emailAddress, name: displayName } : { email: emailAddress };
+	});
 }
 
 /**
@@ -247,5 +253,5 @@ export function downloadFile(url: string, filename: string) {
 export function isValidEmailFormat(email: string): boolean {
 	if (!email) return false;
 	const { emailAddress } = parseSenderInfo(email);
-	return !!emailAddress && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress);
+	return !!emailAddress && EMAIL_REGEX.test(emailAddress);
 }

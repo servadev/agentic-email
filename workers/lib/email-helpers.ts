@@ -50,12 +50,18 @@ export async function listMailboxes(
  * Normalise to/from addresses and validate the sender matches the mailbox.
  * Returns the normalised values or throws with a user-facing message.
  */
+export function formatAddressList(addresses: string | string[] | { email: string; name?: string }[] | null | undefined): string {
+	if (!addresses) return "";
+	if (typeof addresses === "string") return addresses;
+	return addresses.map(t => typeof t === "string" ? t : (t.name ? `${t.name} <${t.email}>` : t.email)).join(", ");
+}
+
 export function validateSender(
-	to: string | string[],
+	to: string | string[] | { email: string; name?: string }[],
 	from: string | { email: string; name: string },
 	mailboxId: string,
 ): { toStr: string; fromEmail: string; fromDomain: string } {
-	const toStr = (Array.isArray(to) ? to.join(", ") : to).toLowerCase();
+	const toStr = formatAddressList(to).toLowerCase();
 	const fromEmail = (typeof from === "string" ? from : from.email).toLowerCase();
 
 	if (fromEmail !== mailboxId.toLowerCase()) {

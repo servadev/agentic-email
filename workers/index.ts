@@ -14,6 +14,7 @@ import {
 	generateMessageId,
 	buildThreadingHeaders,
 	listMailboxes,
+	formatAddressList,
 } from "./lib/email-helpers";
 import { SendEmailRequestSchema } from "./lib/schemas";
 import { handleReplyEmail, handleForwardEmail } from "./routes/reply-forward";
@@ -188,16 +189,16 @@ app.post("/api/v1/mailboxes/:mailboxId/emails", async (c: AppContext) => {
 
 	await stub.createEmail(Folders.SENT, {
 		id: messageId, subject, sender: fromEmail, recipient: toStr,
-		cc: cc ? (Array.isArray(cc) ? cc.join(", ") : cc).toLowerCase() : null,
-		bcc: bcc ? (Array.isArray(bcc) ? bcc.join(", ") : bcc).toLowerCase() : null,
+		cc: cc ? formatAddressList(cc).toLowerCase() : null,
+		bcc: bcc ? formatAddressList(bcc).toLowerCase() : null,
 		date: new Date().toISOString(), body: html || text || "",
 		in_reply_to: in_reply_to || null, email_references: references ? JSON.stringify(references) : null,
 		thread_id: thread_id || in_reply_to || messageId, message_id: outgoingMessageId,
 		raw_headers: JSON.stringify([
 			{ key: "from", value: typeof from === "string" ? from : `${from.name} <${from.email}>` },
-			{ key: "to", value: Array.isArray(to) ? to.join(", ") : to },
-			...(cc ? [{ key: "cc", value: Array.isArray(cc) ? cc.join(", ") : cc }] : []),
-			...(bcc ? [{ key: "bcc", value: Array.isArray(bcc) ? bcc.join(", ") : bcc }] : []),
+			{ key: "to", value: formatAddressList(to) },
+			...(cc ? [{ key: "cc", value: formatAddressList(cc) }] : []),
+			...(bcc ? [{ key: "bcc", value: formatAddressList(bcc) }] : []),
 			{ key: "subject", value: subject }, { key: "date", value: new Date().toISOString() },
 			{ key: "message-id", value: `<${outgoingMessageId}>` },
 		]),

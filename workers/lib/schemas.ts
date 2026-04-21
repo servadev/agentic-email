@@ -52,6 +52,7 @@ export interface AttachmentInfo {
 const RecipientFieldSchema = z.union([
 	z.string().email(),
 	z.array(z.string().email()).min(1),
+	z.array(z.object({ email: z.string().email(), name: z.string().optional() })).min(1),
 ]);
 
 export const ErrorResponseSchema = z.object({

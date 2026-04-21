@@ -241,10 +241,24 @@ export function useComposeForm(mailboxId?: string, _folder?: string) {
 		const ccRecipients = splitEmailList(cc); const bccRecipients = splitEmailList(bcc);
 		const fromName = currentMailbox.settings?.fromName || currentMailbox.name;
 		const from = fromName && fromName !== currentMailbox.email ? { email: currentMailbox.email, name: fromName } : currentMailbox.email;
+		
+		let toValue, ccValue, bccValue;
+		try {
+			toValue = toEmailListValue(toRecipients);
+			ccValue = toEmailListValue(ccRecipients);
+			bccValue = toEmailListValue(bccRecipients);
+		} catch (err) {
+			const msg = err instanceof Error ? err.message : "Invalid email address format";
+			setError(msg);
+			toastManager.add({ title: msg, variant: "error" });
+			return;
+		}
+
+		if (!toValue || toValue.length === 0) { setError("Add at least one valid recipient."); return; }
 		const emailData = {
-			to: toEmailListValue(toRecipients),
-			cc: toEmailListValue(ccRecipients),
-			bcc: toEmailListValue(bccRecipients),
+			to: toValue,
+			cc: ccValue,
+			bcc: bccValue,
 			from,
 			subject,
 			html: body,

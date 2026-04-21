@@ -227,7 +227,9 @@ export default function EmailListRoute() {
 	});
 	
 	const allEmails = useMemo(() => {
-		if (folder === Folders.SENT) return emails;
+		// Only merge Sent emails if we are in the Inbox (to show our replies in the thread list)
+		// Or if we are in a custom contact view that spans folders.
+		if (folder !== Folders.INBOX && !selectedContact) return emails;
 		
 		const sentEmails = sentEmailData?.emails ?? [];
 		// Combine and deduplicate by ID just in case
@@ -241,7 +243,7 @@ export default function EmailListRoute() {
 			}
 		}
 		return combined;
-	}, [emails, sentEmailData, folder]);
+	}, [emails, sentEmailData, folder, selectedContact]);
 
 	const { data: folders = [] } = useFolders(mailboxId);
 
