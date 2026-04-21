@@ -5,14 +5,22 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router";
 import { useEmail } from "~/queries/emails";
-import { CaretLeftIcon } from "@phosphor-icons/react";
+import { useContacts } from "~/queries/contacts";
+import { 
+	CaretLeftIcon,
+	LinkedinLogoIcon,
+	FacebookLogoIcon,
+	LinkIcon,
+	XLogoIcon
+} from "@phosphor-icons/react";
 import { useUIStore } from "~/hooks/useUIStore";
-import type { Email } from "~/types";
+import type { Email, ContactData } from "~/types";
 
 export default function SenderCard({ contactEmail }: { contactEmail: string }) {
 	const { mailboxId } = useParams<{ mailboxId: string }>();
 	const queryClient = useQueryClient();
 	const { toggleSenderCard } = useUIStore();
+	const { data: contactsData = [] } = useContacts(mailboxId);
 
 	// We use the queryClient to get all emails currently loaded in any list query
 	const allEmailQueries = queryClient.getQueriesData<{ emails: Email[] }>({
@@ -60,12 +68,23 @@ export default function SenderCard({ contactEmail }: { contactEmail: string }) {
 	// Remove quotes if present
 	displayName = displayName.replace(/^"|"$/g, "").trim();
 
+	const contact = contactsData.find(c => c.id === contactEmail.toLowerCase());
+	
+	// If the user has edited the contact, prefer those values
+	if (contact?.displayName) {
+		displayName = contact.displayName;
+	}
+
+	const displayTitle = contact?.title && contact?.company ? `${contact.title} of ${contact.company}` : contact?.title || contact?.company || "";
+	const displayLocation = contact?.officeLocation || "";
+	const avatarUrl = contact?.avatarUrl;
+
 	const recentCount = seenThreads.size;
 
 	const initial = displayName.charAt(0).toUpperCase() || "?";
 
 	return (
-		<div className="flex flex-col h-full bg-transparent text-sh-text-white relative">
+		<div className="flex flex-col h-full bg-transparent text-sh-text-white relative overflow-y-auto no-scrollbar">
 			{/* Mobile back button */}
 			<div className="md:hidden absolute top-3 left-3">
 				<button
@@ -78,22 +97,46 @@ export default function SenderCard({ contactEmail }: { contactEmail: string }) {
 				</button>
 			</div>
 
-			<div className="flex flex-col items-center p-8 border-b border-sh-border mt-6 md:mt-0">
-				<div className="w-16 h-16 rounded-full bg-sh-accent flex items-center justify-center text-xl font-semibold mb-4 text-white">
-					{initial}
+			<div className="flex flex-col items-start p-6 mt-6 md:mt-0">
+				<h2 className="text-[18px] font-semibold mb-6 truncate w-full">{displayName}</h2>
+				
+				<div className="flex items-center gap-4 mb-6">
+					<div className="w-16 h-16 rounded-full bg-sh-bg-hover flex items-center justify-center text-2xl font-bold text-white shrink-0 overflow-hidden border border-sh-border">
+						{avatarUrl ? (
+							<img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+						) : (
+							initial
+						)}
+					</div>
+					<div className="flex flex-col min-w-0">
+						<span className="text-[14px] font-medium truncate text-sh-text-white">{emailAddress}</span>
+						{displayLocation && (
+							<span className="text-[13px] text-sh-text-muted truncate">{displayLocation}</span>
+						)}
+					</div>
 				</div>
-				<h2 className="text-[15px] font-medium mb-1 text-center truncate w-full px-4">{displayName}</h2>
-				<p className="text-[13px] text-sh-text-muted text-center truncate w-full px-4">{emailAddress}</p>
-			</div>
 
-			<div className="flex flex-col p-6 gap-6">
-				<div>
-					<h3 className="text-[11px] uppercase tracking-wider text-sh-text-muted font-semibold mb-3">
-						About
-					</h3>
-					<div className="flex justify-between items-center py-1">
-						<span className="text-[13px] text-sh-text-read">Recent threads</span>
-						<span className="text-[13px] font-medium text-sh-text-white">{recentCount}</span>
+				{displayTitle && (
+					<p className="text-[14px] font-medium text-sh-text-white mb-8">{displayTitle}</p>
+				)}
+
+				{/* Social Placeholders */}
+				<div className="flex flex-col gap-4 w-full">
+					<div className="flex items-center gap-3 text-sh-text-muted hover:text-sh-text-white transition-colors cursor-pointer">
+						<LinkedinLogoIcon size={20} />
+						<span className="text-[14px] font-medium">LinkedIn</span>
+					</div>
+					<div className="flex items-center gap-3 text-sh-text-muted hover:text-sh-text-white transition-colors cursor-pointer">
+						<FacebookLogoIcon size={20} />
+						<span className="text-[14px] font-medium">Facebook</span>
+					</div>
+					<div className="flex items-center gap-3 text-sh-text-muted hover:text-sh-text-white transition-colors cursor-pointer">
+						<LinkIcon size={20} />
+						<span className="text-[14px] font-medium">{emailAddress.split("@")[1] || "website.com"}</span>
+					</div>
+					<div className="flex items-center gap-3 text-sh-text-muted hover:text-sh-text-white transition-colors cursor-pointer">
+						<XLogoIcon size={20} />
+						<span className="text-[14px] font-medium">@{displayName.replace(/\s+/g, "")}</span>
 					</div>
 				</div>
 			</div>

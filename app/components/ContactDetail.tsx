@@ -57,6 +57,14 @@ function ContactEditModal({ contact, onClose }: { contact: Contact; onClose: () 
 	const [department, setDepartment] = useState(editedData.department || "");
 	const [officeLocation, setOfficeLocation] = useState(editedData.officeLocation || "");
 	const [avatarUrl, setAvatarUrl] = useState(editedData.avatarUrl || "");
+	
+	// Social fields (placeholder state for future implementation)
+	const [linkedIn, setLinkedIn] = useState("");
+	const [facebook, setFacebook] = useState("");
+	const [website, setWebsite] = useState("");
+	const [xAccount, setXAccount] = useState("");
+	
+	const [activeTab, setActiveTab] = useState<"contact" | "organization" | "socials">("contact");
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,118 +115,149 @@ function ContactEditModal({ contact, onClose }: { contact: Contact; onClose: () 
 				aria-modal="true"
 				onClick={(e) => e.stopPropagation()}
 			>
-				<div className="flex justify-end p-4">
-					<button onClick={onClose} className="text-sh-text-muted hover:text-sh-text-white transition-colors">
+				<div className="flex justify-between items-center p-4 pb-0">
+					<div className="flex gap-1 bg-sh-bg-panel p-1 rounded-lg">
+						<button 
+							onClick={() => setActiveTab("contact")}
+							className={`px-4 py-1.5 text-[13px] font-medium rounded-md transition-colors ${activeTab === "contact" ? "bg-sh-bg-hover text-white" : "text-sh-text-muted hover:text-sh-text-white"}`}
+						>
+							Contact
+						</button>
+						<button 
+							onClick={() => setActiveTab("organization")}
+							className={`px-4 py-1.5 text-[13px] font-medium rounded-md transition-colors ${activeTab === "organization" ? "bg-sh-bg-hover text-white" : "text-sh-text-muted hover:text-sh-text-white"}`}
+						>
+							Organization
+						</button>
+						<button 
+							onClick={() => setActiveTab("socials")}
+							className={`px-4 py-1.5 text-[13px] font-medium rounded-md transition-colors ${activeTab === "socials" ? "bg-sh-bg-hover text-white" : "text-sh-text-muted hover:text-sh-text-white"}`}
+						>
+							Socials
+						</button>
+					</div>
+					<button onClick={onClose} className="text-sh-text-muted hover:text-sh-text-white transition-colors mb-auto">
 						<XIcon size={20} />
 					</button>
 				</div>
 
-				<div className="overflow-y-auto px-8 pb-8 space-y-8 no-scrollbar">
-					{/* Avatar & Name */}
-					<div className="flex gap-5 items-start">
-						<div className="mt-4 text-sh-text-muted"><UserIcon size={20} /></div>
-						<div 
-							className="w-16 h-16 rounded-full bg-sh-bg-hover flex items-center justify-center text-2xl font-bold border border-sh-border shrink-0 mt-2 text-white overflow-hidden cursor-pointer group relative"
-							onClick={() => fileInputRef.current?.click()}
-							title="Click to upload avatar"
-						>
-							{avatarUrl ? (
-								<img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-							) : (
-								(firstName.charAt(0).toUpperCase() || "?")
-							)}
-							<div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center">
-								<PencilSimpleIcon size={20} className="text-white" />
-							</div>
-						</div>
-						<input 
-							type="file" 
-							accept="image/*" 
-							className="hidden" 
-							ref={fileInputRef} 
-							onChange={handleAvatarUpload} 
-						/>
-						<div className="flex-1 space-y-3 mt-1">
-							<div>
-								<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">First name</label>
-								<input value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
-							</div>
-							<div>
-								<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Last name</label>
-								<input value={lastName} onChange={e => setLastName(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
-							</div>
-							<button className="flex items-center text-[#0078d4] hover:text-[#106ebe] text-[13px] hover:underline mt-1 transition-colors">
-								<PlusIcon size={14} className="mr-1" /> Add name field
-							</button>
-						</div>
-					</div>
-
-					{/* Email */}
-					<div className="flex gap-5 items-start">
-						<div className="mt-4 text-sh-text-muted"><EnvelopeSimpleIcon size={20} /></div>
-						<div className="flex-1">
-							<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Email</label>
-							<input value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
-							<button className="flex items-center text-[#0078d4] hover:text-[#106ebe] text-[13px] hover:underline mt-3 transition-colors">
-								<PlusIcon size={14} className="mr-1" /> Add email
-							</button>
-						</div>
-					</div>
-
-					{/* Phone */}
-					<div className="flex gap-5 items-start">
-						<div className="mt-4 text-sh-text-muted"><PhoneIcon size={20} /></div>
-						<div className="flex-1">
-							<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Device number</label>
-							<input value={deviceNumber} onChange={e => setDeviceNumber(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
-							<button className="flex items-center text-[#0078d4] hover:text-[#106ebe] text-[13px] hover:underline mt-3 transition-colors">
-								<PlusIcon size={14} className="mr-1" /> Add phone
-							</button>
-						</div>
-					</div>
-
-					{/* Work */}
-					<div className="flex gap-5 items-start">
-						<div className="mt-4 text-sh-text-muted"><BriefcaseIcon size={20} /></div>
-						<div className="flex-1">
-							<div className="grid grid-cols-2 gap-x-6 gap-y-4">
-								<div>
-									<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Company</label>
-									<input value={company} onChange={e => setCompany(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
+				<div className="overflow-y-auto px-8 py-8 space-y-8 no-scrollbar">
+					{activeTab === "contact" && (
+						<>
+							{/* Avatar & Name */}
+							<div className="flex gap-5 items-start">
+								<div className="mt-4 text-sh-text-muted"><UserIcon size={20} /></div>
+								<div 
+									className="w-16 h-16 rounded-full bg-sh-bg-hover flex items-center justify-center text-2xl font-bold border border-sh-border shrink-0 mt-2 text-white overflow-hidden cursor-pointer group relative"
+									onClick={() => fileInputRef.current?.click()}
+									title="Click to upload avatar"
+								>
+									{avatarUrl ? (
+										<img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+									) : (
+										(firstName.charAt(0).toUpperCase() || "?")
+									)}
+									<div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center">
+										<PencilSimpleIcon size={20} className="text-white" />
+									</div>
 								</div>
-								<div>
-									<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Title</label>
-									<input value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
-								</div>
-								<div>
-									<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Department</label>
-									<input value={department} onChange={e => setDepartment(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
-								</div>
-								<div>
-									<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Office location</label>
-									<input value={officeLocation} onChange={e => setOfficeLocation(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
+								<input 
+									type="file" 
+									accept="image/*" 
+									className="hidden" 
+									ref={fileInputRef} 
+									onChange={handleAvatarUpload} 
+								/>
+								<div className="flex-1 space-y-3 mt-1">
+									<div>
+										<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">First name</label>
+										<input value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
+									</div>
+									<div>
+										<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Last name</label>
+										<input value={lastName} onChange={e => setLastName(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
+									</div>
 								</div>
 							</div>
-							<button className="flex items-center text-[#0078d4] hover:text-[#106ebe] text-[13px] hover:underline mt-4 transition-colors">
-								<PlusIcon size={14} className="mr-1" /> Add work field
-							</button>
+
+							{/* Email */}
+							<div className="flex gap-5 items-start">
+								<div className="mt-4 text-sh-text-muted"><EnvelopeSimpleIcon size={20} /></div>
+								<div className="flex-1">
+									<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Email</label>
+									<input value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
+								</div>
+							</div>
+
+							{/* Phone */}
+							<div className="flex gap-5 items-start">
+								<div className="mt-4 text-sh-text-muted"><PhoneIcon size={20} /></div>
+								<div className="flex-1">
+									<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Device number</label>
+									<input value={deviceNumber} onChange={e => setDeviceNumber(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
+								</div>
+							</div>
+						</>
+					)}
+
+					{activeTab === "organization" && (
+						<div className="flex gap-5 items-start">
+							<div className="mt-4 text-sh-text-muted"><BriefcaseIcon size={20} /></div>
+							<div className="flex-1">
+								<div className="grid grid-cols-2 gap-x-6 gap-y-4">
+									<div>
+										<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Company</label>
+										<input value={company} onChange={e => setCompany(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
+									</div>
+									<div>
+										<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Title</label>
+										<input value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
+									</div>
+									<div>
+										<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Department</label>
+										<input value={department} onChange={e => setDepartment(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
+									</div>
+									<div>
+										<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Office location</label>
+										<input value={officeLocation} onChange={e => setOfficeLocation(e.target.value)} className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
+									</div>
+								</div>
+							</div>
 						</div>
-					</div>
+					)}
 
-					{/* Address & Others */}
-					<div className="flex gap-5 items-center">
-						<div className="text-sh-text-muted"><MapPinIcon size={20} /></div>
-						<button className="flex items-center text-[#0078d4] hover:text-[#106ebe] text-[13px] hover:underline transition-colors">
-							<PlusIcon size={14} className="mr-1" /> Add address
-						</button>
-					</div>
-
-					<div className="flex gap-5 items-center">
-						<div className="text-sh-text-muted"><List size={20} /></div>
-						<button className="flex items-center text-[#0078d4] hover:text-[#106ebe] text-[13px] hover:underline transition-colors">
-							<PlusIcon size={14} className="mr-1" /> Add others
-						</button>
-					</div>
+					{activeTab === "socials" && (
+						<div className="flex flex-col gap-6">
+							<div className="flex gap-5 items-start">
+								<div className="mt-4 text-sh-text-muted"><LinkedinLogoIcon size={20} /></div>
+								<div className="flex-1">
+									<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">LinkedIn</label>
+									<input value={linkedIn} onChange={e => setLinkedIn(e.target.value)} placeholder="linkedin.com/in/username" className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
+								</div>
+							</div>
+							<div className="flex gap-5 items-start">
+								<div className="mt-4 text-sh-text-muted"><ChatCircleIcon size={20} /></div>
+								<div className="flex-1">
+									<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Facebook</label>
+									<input value={facebook} onChange={e => setFacebook(e.target.value)} placeholder="facebook.com/username" className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
+								</div>
+							</div>
+							<div className="flex gap-5 items-start">
+								<div className="mt-4 text-sh-text-muted"><List size={20} /></div>
+								<div className="flex-1">
+									<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">Website</label>
+									<input value={website} onChange={e => setWebsite(e.target.value)} placeholder="example.com" className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
+								</div>
+							</div>
+							<div className="flex gap-5 items-start">
+								<div className="mt-4 text-sh-text-muted"><UsersIcon size={20} /></div>
+								<div className="flex-1">
+									<label className="text-[11px] font-medium text-sh-text-muted block mb-0.5">X (Twitter)</label>
+									<input value={xAccount} onChange={e => setXAccount(e.target.value)} placeholder="@username" className="w-full bg-transparent border-b border-sh-border focus:border-sh-accent outline-none text-[14px] pb-1 transition-colors" />
+								</div>
+							</div>
+						</div>
+					)}
 				</div>
 
 				<div className="px-8 py-4 border-t border-sh-border flex gap-3 mt-auto bg-black/20">
@@ -347,7 +386,7 @@ export default function ContactDetail({ contact, onBack }: ContactDetailProps) {
 						Organization
 					</button>
 					<button className="pb-3 text-[15px] font-medium border-b-2 border-transparent text-sh-text-muted hover:text-sh-text-white transition-colors whitespace-nowrap">
-						LinkedIn
+						Socials
 					</button>
 				</div>
 
