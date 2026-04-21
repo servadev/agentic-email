@@ -58,11 +58,11 @@ function ContactEditModal({ contact, onClose }: { contact: Contact; onClose: () 
 	const [officeLocation, setOfficeLocation] = useState(editedData.officeLocation || "");
 	const [avatarUrl, setAvatarUrl] = useState(editedData.avatarUrl || "");
 	
-	// Social fields (placeholder state for future implementation)
-	const [linkedIn, setLinkedIn] = useState("");
-	const [facebook, setFacebook] = useState("");
-	const [website, setWebsite] = useState("");
-	const [xAccount, setXAccount] = useState("");
+	// Social fields
+	const [linkedIn, setLinkedIn] = useState(editedData.linkedIn || "");
+	const [facebook, setFacebook] = useState(editedData.facebook || "");
+	const [website, setWebsite] = useState(editedData.website || "");
+	const [xAccount, setXAccount] = useState(editedData.xAccount || "");
 	
 	const [activeTab, setActiveTab] = useState<"contact" | "organization" | "socials">("contact");
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -94,6 +94,10 @@ function ContactEditModal({ contact, onClose }: { contact: Contact; onClose: () 
 				department,
 				officeLocation,
 				avatarUrl,
+				linkedIn,
+				facebook,
+				website,
+				xAccount,
 				displayName: `${firstName} ${lastName}`.trim()
 			}
 		}, {
@@ -317,11 +321,11 @@ export default function ContactDetail({ contact, onBack }: ContactDetailProps) {
 
 	const displayName = editedData.displayName || contact.displayName;
 	const emailAddress = editedData.id || contact.emailAddress;
-	const deviceNumber = editedData.deviceNumber ?? "+1 (234) 456-7891";
-	const company = editedData.company ?? "Contoso";
-	const title = editedData.title ?? "Senior Researcher";
-	const department = editedData.department ?? "Design";
-	const officeLocation = editedData.officeLocation ?? "OSLO-EUFEMIA/4175";
+	const deviceNumber = editedData.deviceNumber || "-";
+	const company = editedData.company || "-";
+	const title = editedData.title || "-";
+	const department = editedData.department || "-";
+	const officeLocation = editedData.officeLocation || "-";
 
 	const initial = displayName.charAt(0).toUpperCase() || "?";
 
@@ -363,9 +367,6 @@ export default function ContactDetail({ contact, onBack }: ContactDetailProps) {
 							</button>
 							<button className="flex items-center justify-center p-2.5 bg-sh-bg-panel hover:bg-sh-bg-hover transition-colors rounded-[4px] border border-sh-border focus:outline-none focus:ring-2 focus:ring-sh-accent" title="Chat">
 								<ChatCircleIcon size={20} />
-							</button>
-							<button className="flex items-center justify-center p-2.5 bg-sh-bg-panel hover:bg-sh-bg-hover transition-colors rounded-[4px] border border-sh-border focus:outline-none focus:ring-2 focus:ring-sh-accent" title="LinkedIn">
-								<LinkedinLogoIcon size={20} />
 							</button>
 							<button onClick={() => setIsEditing(true)} className="flex items-center justify-center p-2.5 bg-sh-bg-panel hover:bg-sh-bg-hover transition-colors rounded-[4px] border border-sh-border focus:outline-none focus:ring-2 focus:ring-sh-accent" title="Edit Contact">
 								<PencilSimpleIcon size={20} />
@@ -420,13 +421,8 @@ export default function ContactDetail({ contact, onBack }: ContactDetailProps) {
 						<ContactField
 							icon={<PhoneIcon size={20} />}
 							label="Work phone"
-							value="+1 (987) 654-3210"
+							value="-"
 							isLink
-						/>
-						<ContactField
-							icon={<MapPinIcon size={20} />}
-							label="Business address"
-							value="Oslo, Norway"
 						/>
 						<ContactField
 							icon={<BuildingsIcon size={20} />}

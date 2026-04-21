@@ -124,19 +124,19 @@ export default function SenderCard({ contactEmail }: { contactEmail: string }) {
 				<div className="flex flex-col gap-4 w-full">
 					<div className="flex items-center gap-3 text-sh-text-muted hover:text-sh-text-white transition-colors cursor-pointer">
 						<LinkedinLogoIcon size={24} />
-						<span className="text-[15px] font-medium">LinkedIn</span>
+						<span className="text-[15px] font-medium">{contact?.linkedIn || "-"}</span>
 					</div>
 					<div className="flex items-center gap-3 text-sh-text-muted hover:text-sh-text-white transition-colors cursor-pointer">
 						<FacebookLogoIcon size={24} />
-						<span className="text-[15px] font-medium">Facebook</span>
+						<span className="text-[15px] font-medium">{contact?.facebook || "-"}</span>
 					</div>
 					<div className="flex items-center gap-3 text-sh-text-muted hover:text-sh-text-white transition-colors cursor-pointer">
 						<LinkIcon size={24} />
-						<span className="text-[15px] font-medium">{emailAddress.split("@")[1] || "website.com"}</span>
+						<span className="text-[15px] font-medium">{contact?.website || "-"}</span>
 					</div>
 					<div className="flex items-center gap-3 text-sh-text-muted hover:text-sh-text-white transition-colors cursor-pointer">
 						<XLogoIcon size={24} />
-						<span className="text-[15px] font-medium">@{displayName.replace(/\s+/g, "")}</span>
+						<span className="text-[15px] font-medium">{contact?.xAccount || "-"}</span>
 					</div>
 				</div>
 			</div>

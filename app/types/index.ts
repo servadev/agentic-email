@@ -77,5 +77,9 @@ export interface ContactData {
 	department?: string;
 	officeLocation?: string;
 	avatarUrl?: string;
+	linkedIn?: string;
+	facebook?: string;
+	website?: string;
+	xAccount?: string;
 	updated_at?: string;
 }
