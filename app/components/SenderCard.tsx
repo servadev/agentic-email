@@ -75,7 +75,7 @@ export default function SenderCard({ contactEmail }: { contactEmail: string }) {
 		displayName = contact.displayName;
 	}
 
-	const displayTitle = contact?.title && contact?.company ? `${contact.title} of ${contact.company}` : contact?.title || contact?.company || "";
+	const displayTitle = contact?.title && contact?.company ? `${contact.title} • ${contact.company}` : contact?.title || contact?.company || "";
 	const displayLocation = contact?.officeLocation || "";
 	const avatarUrl = contact?.avatarUrl;
 
@@ -98,45 +98,45 @@ export default function SenderCard({ contactEmail }: { contactEmail: string }) {
 			</div>
 
 			<div className="flex flex-col items-start p-6 mt-6 md:mt-0">
-				<h2 className="text-[18px] font-semibold mb-6 truncate w-full">{displayName}</h2>
+				<h2 className="text-[24px] font-semibold mb-6 truncate w-full">{displayName}</h2>
 				
 				<div className="flex items-center gap-4 mb-6">
-					<div className="w-16 h-16 rounded-full bg-sh-bg-hover flex items-center justify-center text-2xl font-bold text-white shrink-0 overflow-hidden border border-sh-border">
+					<div className="w-20 h-20 rounded-full bg-sh-bg-hover flex items-center justify-center text-3xl font-bold text-white shrink-0 overflow-hidden border border-sh-border">
 						{avatarUrl ? (
 							<img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
 						) : (
 							initial
 						)}
 					</div>
-					<div className="flex flex-col min-w-0">
-						<span className="text-[14px] font-medium truncate text-sh-text-white">{emailAddress}</span>
+					<div className="flex flex-col min-w-0 gap-1">
+						<span className="text-[16px] font-medium truncate text-sh-text-white">{emailAddress}</span>
 						{displayLocation && (
-							<span className="text-[13px] text-sh-text-muted truncate">{displayLocation}</span>
+							<span className="text-[14px] text-sh-text-muted truncate">{displayLocation}</span>
 						)}
 					</div>
 				</div>
 
 				{displayTitle && (
-					<p className="text-[14px] font-medium text-sh-text-white mb-8">{displayTitle}</p>
+					<p className="text-[16px] font-medium text-sh-text-muted mb-8">{displayTitle}</p>
 				)}
 
 				{/* Social Placeholders */}
 				<div className="flex flex-col gap-4 w-full">
 					<div className="flex items-center gap-3 text-sh-text-muted hover:text-sh-text-white transition-colors cursor-pointer">
-						<LinkedinLogoIcon size={20} />
-						<span className="text-[14px] font-medium">LinkedIn</span>
+						<LinkedinLogoIcon size={24} />
+						<span className="text-[15px] font-medium">LinkedIn</span>
 					</div>
 					<div className="flex items-center gap-3 text-sh-text-muted hover:text-sh-text-white transition-colors cursor-pointer">
-						<FacebookLogoIcon size={20} />
-						<span className="text-[14px] font-medium">Facebook</span>
+						<FacebookLogoIcon size={24} />
+						<span className="text-[15px] font-medium">Facebook</span>
 					</div>
 					<div className="flex items-center gap-3 text-sh-text-muted hover:text-sh-text-white transition-colors cursor-pointer">
-						<LinkIcon size={20} />
-						<span className="text-[14px] font-medium">{emailAddress.split("@")[1] || "website.com"}</span>
+						<LinkIcon size={24} />
+						<span className="text-[15px] font-medium">{emailAddress.split("@")[1] || "website.com"}</span>
 					</div>
 					<div className="flex items-center gap-3 text-sh-text-muted hover:text-sh-text-white transition-colors cursor-pointer">
-						<XLogoIcon size={20} />
-						<span className="text-[14px] font-medium">@{displayName.replace(/\s+/g, "")}</span>
+						<XLogoIcon size={24} />
+						<span className="text-[15px] font-medium">@{displayName.replace(/\s+/g, "")}</span>
 					</div>
 				</div>
 			</div>
