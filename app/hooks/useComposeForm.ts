@@ -126,6 +126,7 @@ function buildInitialComposeFields(
 	if (!original) {
 		return {
 			...EMPTY_FIELDS,
+			to: composeOptions.prefillTo || "",
 			body: sigBlock ? `<p><br></p>${sigBlock}` : "",
 		};
 	}

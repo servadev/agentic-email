@@ -23,8 +23,10 @@ import {
 } from "@phosphor-icons/react";
 import React, { useState, useMemo, useRef } from "react";
 import type { Email, ContactData } from "~/types";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { useContacts, useUpdateContact } from "~/queries/contacts";
+
+import { useUIStore } from "~/hooks/useUIStore";
 
 interface Contact {
 	emailAddress: string;
@@ -310,8 +312,11 @@ function ContactField({
 
 export default function ContactDetail({ contact, onBack }: ContactDetailProps) {
 	const { mailboxId } = useParams<{ mailboxId: string }>();
+	const navigate = useNavigate();
+	const { startCompose, setSelectedContact } = useUIStore();
 	const { data: contactsData = [] } = useContacts(mailboxId);
 	const [isEditing, setIsEditing] = useState(false);
+	const [activeDetailTab, setActiveDetailTab] = useState<"overview" | "contact" | "organization" | "socials">("overview");
 
 	if (!contact) return null;
 
@@ -328,6 +333,8 @@ export default function ContactDetail({ contact, onBack }: ContactDetailProps) {
 	const officeLocation = editedData.officeLocation || "-";
 
 	const initial = displayName.charAt(0).toUpperCase() || "?";
+	
+	const navigateToInbox = () => navigate(`/mailbox/${mailboxId}/emails/inbox`);
 
 	return (
 		<div className="flex flex-col h-full w-full bg-transparent text-sh-text-white relative overflow-y-auto no-scrollbar">
@@ -362,10 +369,16 @@ export default function ContactDetail({ contact, onBack }: ContactDetailProps) {
 						</p>
 
 						<div className="flex items-center gap-2">
-							<button className="flex items-center justify-center p-2.5 bg-sh-bg-panel hover:bg-sh-bg-hover transition-colors rounded-[4px] border border-sh-border focus:outline-none focus:ring-2 focus:ring-sh-accent" title="Email">
+							<button onClick={() => {
+								navigateToInbox();
+								startCompose({ mode: "new", prefillTo: contact.emailAddress });
+							}} className="flex items-center justify-center p-2.5 bg-sh-bg-panel hover:bg-sh-bg-hover transition-colors rounded-[4px] border border-sh-border focus:outline-none focus:ring-2 focus:ring-sh-accent" title="Email">
 								<EnvelopeSimpleIcon size={20} />
 							</button>
-							<button className="flex items-center justify-center p-2.5 bg-sh-bg-panel hover:bg-sh-bg-hover transition-colors rounded-[4px] border border-sh-border focus:outline-none focus:ring-2 focus:ring-sh-accent" title="Chat">
+							<button onClick={() => {
+								navigateToInbox();
+								setSelectedContact(contact.emailAddress);
+							}} className="flex items-center justify-center p-2.5 bg-sh-bg-panel hover:bg-sh-bg-hover transition-colors rounded-[4px] border border-sh-border focus:outline-none focus:ring-2 focus:ring-sh-accent" title="Chat">
 								<ChatCircleIcon size={20} />
 							</button>
 							<button onClick={() => setIsEditing(true)} className="flex items-center justify-center p-2.5 bg-sh-bg-panel hover:bg-sh-bg-hover transition-colors rounded-[4px] border border-sh-border focus:outline-none focus:ring-2 focus:ring-sh-accent" title="Edit Contact">
@@ -380,71 +393,188 @@ export default function ContactDetail({ contact, onBack }: ContactDetailProps) {
 
 				{/* Tabs Section */}
 				<div className="flex items-center gap-8 border-b border-sh-border mb-8 overflow-x-auto no-scrollbar shrink-0">
-					<button className="pb-3 text-[15px] font-medium border-b-2 border-sh-accent text-sh-text-white whitespace-nowrap">
+					<button 
+						onClick={() => setActiveDetailTab("overview")}
+						className={`pb-3 text-[15px] font-medium border-b-2 whitespace-nowrap transition-colors ${activeDetailTab === "overview" ? "border-sh-accent text-sh-text-white" : "border-transparent text-sh-text-muted hover:text-sh-text-white"}`}
+					>
 						Overview
 					</button>
-					<button className="pb-3 text-[15px] font-medium border-b-2 border-transparent text-sh-text-muted hover:text-sh-text-white transition-colors whitespace-nowrap">
+					<button 
+						onClick={() => setActiveDetailTab("contact")}
+						className={`pb-3 text-[15px] font-medium border-b-2 whitespace-nowrap transition-colors ${activeDetailTab === "contact" ? "border-sh-accent text-sh-text-white" : "border-transparent text-sh-text-muted hover:text-sh-text-white"}`}
+					>
 						Contact
 					</button>
-					<button className="pb-3 text-[15px] font-medium border-b-2 border-transparent text-sh-text-muted hover:text-sh-text-white transition-colors whitespace-nowrap">
+					<button 
+						onClick={() => setActiveDetailTab("organization")}
+						className={`pb-3 text-[15px] font-medium border-b-2 whitespace-nowrap transition-colors ${activeDetailTab === "organization" ? "border-sh-accent text-sh-text-white" : "border-transparent text-sh-text-muted hover:text-sh-text-white"}`}
+					>
 						Organization
 					</button>
-					<button className="pb-3 text-[15px] font-medium border-b-2 border-transparent text-sh-text-muted hover:text-sh-text-white transition-colors whitespace-nowrap">
+					<button 
+						onClick={() => setActiveDetailTab("socials")}
+						className={`pb-3 text-[15px] font-medium border-b-2 whitespace-nowrap transition-colors ${activeDetailTab === "socials" ? "border-sh-accent text-sh-text-white" : "border-transparent text-sh-text-muted hover:text-sh-text-white"}`}
+					>
 						Socials
 					</button>
 				</div>
 
 				{/* Content Section */}
 				<div>
-					<h2 className="text-[16px] font-semibold text-sh-text-white mb-8">
-						Contact information
-					</h2>
-					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-10 gap-x-12">
-						<ContactField
-							icon={<EnvelopeSimpleIcon size={20} />}
-							label="Email"
-							value={emailAddress}
-							isLink
-						/>
-						<ContactField
-							icon={<ChatCircleIcon size={20} />}
-							label="Chat"
-							value={emailAddress}
-							isLink
-						/>
-						<ContactField
-							icon={<DeviceMobileIcon size={20} />}
-							label="Mobile"
-							value={deviceNumber}
-							isLink
-						/>
-						<ContactField
-							icon={<PhoneIcon size={20} />}
-							label="Work phone"
-							value="-"
-							isLink
-						/>
-						<ContactField
-							icon={<BuildingsIcon size={20} />}
-							label="Company"
-							value={company}
-						/>
-						<ContactField
-							icon={<UsersIcon size={20} />}
-							label="Department"
-							value={department}
-						/>
-						<ContactField
-							icon={<UserCircleIcon size={20} />}
-							label="Title"
-							value={title}
-						/>
-						<ContactField
-							icon={<MapPinIcon size={20} />}
-							label="Office Location"
-							value={officeLocation}
-						/>
-					</div>
+					{activeDetailTab === "overview" && (
+						<>
+							<h2 className="text-[16px] font-semibold text-sh-text-white mb-8">
+								Contact information
+							</h2>
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-10 gap-x-12">
+								<ContactField
+									icon={<EnvelopeSimpleIcon size={20} />}
+									label="Email"
+									value={emailAddress}
+									isLink
+								/>
+								<ContactField
+									icon={<DeviceMobileIcon size={20} />}
+									label="Mobile"
+									value={deviceNumber}
+									isLink
+								/>
+								<ContactField
+									icon={<BuildingsIcon size={20} />}
+									label="Company"
+									value={company}
+								/>
+								<ContactField
+									icon={<UsersIcon size={20} />}
+									label="Department"
+									value={department}
+								/>
+								<ContactField
+									icon={<UserCircleIcon size={20} />}
+									label="Title"
+									value={title}
+								/>
+								<ContactField
+									icon={<MapPinIcon size={20} />}
+									label="Office Location"
+									value={officeLocation}
+								/>
+							</div>
+						</>
+					)}
+					{activeDetailTab === "contact" && (
+						<>
+							<h2 className="text-[16px] font-semibold text-sh-text-white mb-8">
+								Contact details
+							</h2>
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-10 gap-x-12">
+								<ContactField
+									icon={<EnvelopeSimpleIcon size={20} />}
+									label="Email"
+									value={emailAddress}
+									isLink
+								/>
+								<ContactField
+									icon={<DeviceMobileIcon size={20} />}
+									label="Mobile"
+									value={deviceNumber}
+									isLink
+								/>
+								<ContactField
+									icon={<PhoneIcon size={20} />}
+									label="Work phone"
+									value="-"
+									isLink
+								/>
+								<ContactField
+									icon={<LinkedinLogoIcon size={20} />}
+									label="LinkedIn"
+									value={editedData.linkedIn || "-"}
+									isLink={!!editedData.linkedIn}
+								/>
+								<ContactField
+									icon={<ChatCircleIcon size={20} />}
+									label="Facebook"
+									value={editedData.facebook || "-"}
+									isLink={!!editedData.facebook}
+								/>
+								<ContactField
+									icon={<List size={20} />}
+									label="Website"
+									value={editedData.website || "-"}
+									isLink={!!editedData.website}
+								/>
+								<ContactField
+									icon={<UsersIcon size={20} />}
+									label="X (Twitter)"
+									value={editedData.xAccount || "-"}
+									isLink={!!editedData.xAccount}
+								/>
+							</div>
+						</>
+					)}
+					{activeDetailTab === "organization" && (
+						<>
+							<h2 className="text-[16px] font-semibold text-sh-text-white mb-8">
+								Organization
+							</h2>
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-10 gap-x-12">
+								<ContactField
+									icon={<BuildingsIcon size={20} />}
+									label="Company"
+									value={company}
+								/>
+								<ContactField
+									icon={<UsersIcon size={20} />}
+									label="Department"
+									value={department}
+								/>
+								<ContactField
+									icon={<UserCircleIcon size={20} />}
+									label="Title"
+									value={title}
+								/>
+								<ContactField
+									icon={<MapPinIcon size={20} />}
+									label="Office Location"
+									value={officeLocation}
+								/>
+							</div>
+						</>
+					)}
+					{activeDetailTab === "socials" && (
+						<>
+							<h2 className="text-[16px] font-semibold text-sh-text-white mb-8">
+								Socials
+							</h2>
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-10 gap-x-12">
+								<ContactField
+									icon={<LinkedinLogoIcon size={20} />}
+									label="LinkedIn"
+									value={editedData.linkedIn || "-"}
+									isLink={!!editedData.linkedIn}
+								/>
+								<ContactField
+									icon={<ChatCircleIcon size={20} />}
+									label="Facebook"
+									value={editedData.facebook || "-"}
+									isLink={!!editedData.facebook}
+								/>
+								<ContactField
+									icon={<List size={20} />}
+									label="Website"
+									value={editedData.website || "-"}
+									isLink={!!editedData.website}
+								/>
+								<ContactField
+									icon={<UsersIcon size={20} />}
+									label="X (Twitter)"
+									value={editedData.xAccount || "-"}
+									isLink={!!editedData.xAccount}
+								/>
+							</div>
+						</>
+					)}
 				</div>
 			</div>
 			{isEditing && <ContactEditModal contact={contact} onClose={() => setIsEditing(false)} />}

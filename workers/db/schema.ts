@@ -54,5 +54,9 @@ export const contacts = sqliteTable("contacts", {
 	department: text("department"),
 	officeLocation: text("office_location"),
 	avatarUrl: text("avatar_url"),
+	linkedIn: text("linked_in"),
+	facebook: text("facebook"),
+	website: text("website"),
+	xAccount: text("x_account"),
 	updated_at: text("updated_at"),
 });

@@ -13,6 +13,7 @@ export interface ComposeOptions {
 	originalEmail?: Email | null;
 	/** When editing a draft, this holds the draft email to pre-fill the composer */
 	draftEmail?: Email | null;
+	prefillTo?: string;
 }
 
 interface UIState {

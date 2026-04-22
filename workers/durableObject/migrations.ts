@@ -186,4 +186,13 @@ export const mailboxMigrations: Migration[] = [
             );
         `),
 	},
+	{
+		name: "10_add_contact_social_fields",
+		sql: txn(`
+            ALTER TABLE contacts ADD COLUMN linked_in TEXT;
+            ALTER TABLE contacts ADD COLUMN facebook TEXT;
+            ALTER TABLE contacts ADD COLUMN website TEXT;
+            ALTER TABLE contacts ADD COLUMN x_account TEXT;
+        `),
+	},
 ];
