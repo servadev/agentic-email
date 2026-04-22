@@ -263,10 +263,13 @@ export default function EmailListRoute() {
 		prevFolderRef.current = `${mailboxId}/${folder}`;
 
 		if (folderChanged) {
-			closePanel();
+			// Don't close the panel if we're navigating between folders but want to keep the contact selected
+			if (!selectedContact) {
+				closePanel();
+			}
 			setPage(1);
 		}
-	}, [mailboxId, folder, closePanel]);
+	}, [mailboxId, folder, closePanel, selectedContact]);
 
 	const toggleStar = (e: React.MouseEvent, email: Email) => {
 		e.preventDefault();

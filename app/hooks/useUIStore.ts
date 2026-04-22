@@ -76,7 +76,7 @@ export const useUIStore = create<UIState>()(
 
 			selectEmail: (id) => set({ selectedEmailId: id, selectedThreadId: id, isComposing: false }),
 			setSelectedThreadId: (id) => set({ selectedThreadId: id, selectedEmailId: id, isComposing: false }),
-			setSelectedContact: (contact) => set({ selectedContact: contact, selectedThreadId: null, selectedEmailId: null, isComposing: false }),
+			setSelectedContact: (contact) => set({ selectedContact: contact, selectedThreadId: null, selectedEmailId: null, isComposing: false, isSidebarOpen: false }),
 
 			startCompose: (options) =>
 				set((state) => {
