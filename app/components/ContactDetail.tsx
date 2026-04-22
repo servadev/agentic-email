@@ -376,8 +376,8 @@ export default function ContactDetail({ contact, onBack }: ContactDetailProps) {
 								<EnvelopeSimpleIcon size={20} />
 							</button>
 							<button onClick={() => {
-								navigateToInbox();
 								setSelectedContact(contact.emailAddress);
+								navigateToInbox();
 							}} className="flex items-center justify-center p-2.5 bg-sh-bg-panel hover:bg-sh-bg-hover transition-colors rounded-[4px] border border-sh-border focus:outline-none focus:ring-2 focus:ring-sh-accent" title="Chat">
 								<ChatCircleIcon size={20} />
 							</button>
